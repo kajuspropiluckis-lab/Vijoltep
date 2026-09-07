@@ -23,7 +23,7 @@
     line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;
   }
   h1,h2{font-family:var(--serif);font-weight:500;margin:0;}
-  .wrap{max-width:760px;margin:0 auto;padding:40px 24px 80px;}
+  .wrap{max-width:800px;margin:0 auto;padding:40px 24px 80px;}
 
   .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
   .login-card{max-width:340px;width:100%;}
@@ -49,10 +49,26 @@
   }
   .error-msg.show{display:block;}
 
-  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
   .topbar h1{font-size:20px;}
   .logout-link{background:none;border:none;color:var(--ink-muted);font-size:12.5px;cursor:pointer;text-decoration:underline;padding:0;}
   .logout-link:hover{color:var(--ink);}
+
+  .toolbar{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;}
+  .search-input{
+    flex:1;min-width:160px;background:var(--bg-raised);border:1px solid var(--line);border-radius:2px;
+    padding:9px 12px;color:var(--ink);font-size:13.5px;font-family:var(--sans);
+  }
+  .search-input:focus{outline:none;border-color:var(--ink-muted);}
+  .status-filter{
+    background:var(--bg-raised);border:1px solid var(--line);border-radius:2px;
+    padding:9px 12px;color:var(--ink);font-size:13.5px;font-family:var(--sans);
+  }
+  .export-btn{
+    background:none;border:1px solid var(--line);color:var(--ink-muted);font-size:13px;
+    padding:9px 14px;border-radius:2px;cursor:pointer;white-space:nowrap;
+  }
+  .export-btn:hover{border-color:var(--accent);color:var(--ink);}
 
   .empty-note{color:var(--ink-muted);font-size:14px;padding:30px 0;text-align:center;}
 
@@ -63,7 +79,20 @@
   .app-card .field-label{font-size:11.5px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 3px;}
   .app-card .field-value{font-size:14px;}
   .app-card .meta{font-size:11.5px;color:var(--ink-muted);white-space:nowrap;}
-  .del-btn{background:none;border:1px solid var(--line);color:var(--ink-muted);font-size:12px;padding:6px 12px;border-radius:2px;cursor:pointer;flex-shrink:0;}
+
+  .status-badge{
+    display:inline-block;font-size:10px;padding:3px 8px;border-radius:2px;
+    text-transform:uppercase;letter-spacing:.04em;margin-left:8px;vertical-align:middle;
+  }
+  .status-badge.new{background:rgba(167,156,138,.2);color:var(--ink-muted);}
+  .status-badge.approved{background:rgba(79,122,92,.2);color:var(--ok);}
+  .status-badge.rejected{background:rgba(162,69,63,.2);color:var(--accent-ink);}
+
+  .action-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;justify-content:flex-end;}
+  .status-btn{background:none;border:1px solid var(--line);color:var(--ink-muted);font-size:12px;padding:6px 12px;border-radius:2px;cursor:pointer;}
+  .status-btn.approve:hover{border-color:var(--ok);color:var(--ok);}
+  .status-btn.reject:hover{border-color:var(--accent);color:var(--ink);}
+  .del-btn{background:none;border:1px solid var(--line);color:var(--ink-muted);font-size:12px;padding:6px 12px;border-radius:2px;cursor:pointer;}
   .del-btn:hover{border-color:var(--accent);color:var(--ink);}
 
   .loading{color:var(--ink-muted);font-size:14px;text-align:center;padding:40px 0;}
@@ -90,6 +119,16 @@
     <h1>Paraiškos</h1>
     <button class="logout-link" id="logout-btn">Atsijungti</button>
   </div>
+  <div class="toolbar">
+    <input type="text" id="search-input" class="search-input" placeholder="Paieška pagal vardą ar el. paštą…">
+    <select id="status-filter" class="status-filter">
+      <option value="all">Visos</option>
+      <option value="new">Naujos</option>
+      <option value="approved">Patvirtintos</option>
+      <option value="rejected">Atmestos</option>
+    </select>
+    <button class="export-btn" id="export-btn">Eksportuoti CSV</button>
+  </div>
   <div id="applications"></div>
 </div>
 
@@ -100,8 +139,12 @@
     list: '/api/admin/list',
     login: '/api/admin/login',
     logout: '/api/admin/logout',
-    del: '/api/admin/delete'
+    del: '/api/admin/delete',
+    status: '/api/admin/status'
   };
+
+  var STATUS_LABELS = { new: 'Nauja', approved: 'Patvirtinta', rejected: 'Atmesta' };
+  var allApplications = [];
 
   function show(id){
     ['login-view','admin-view','loading-view'].forEach(function(v){
@@ -120,42 +163,93 @@
       if(res.status === 401){ show('login-view'); return; }
       if(!res.ok) throw new Error('Nepavyko įkelti paraiškų.');
       var data = await res.json();
-      renderApplications(data.applications || []);
+      allApplications = data.applications || [];
+      applyFilters();
       show('admin-view');
     }catch(e){
       show('login-view');
     }
   }
 
+  function getFiltered(){
+    var q = document.getElementById('search-input').value.trim().toLowerCase();
+    var statusFilter = document.getElementById('status-filter').value;
+    return allApplications.filter(function(a){
+      var matchesQuery = !q || (a.name||'').toLowerCase().indexOf(q)!==-1 || (a.email||'').toLowerCase().indexOf(q)!==-1;
+      var matchesStatus = statusFilter === 'all' || (a.status||'new') === statusFilter;
+      return matchesQuery && matchesStatus;
+    });
+  }
+  function applyFilters(){ renderApplications(getFiltered()); }
+
   function renderApplications(apps){
     var el = document.getElementById('applications');
     if(apps.length === 0){
-      el.innerHTML = '<p class="empty-note">Paraiškų dar nėra.</p>';
+      el.innerHTML = '<p class="empty-note">Nė viena paraiška neatitinka.</p>';
       return;
     }
     el.innerHTML = apps.map(function(a){
+      var status = a.status || 'new';
       return '<div class="app-card">' +
         '<div class="row">' +
           '<div>' +
-            '<div class="name">'+escapeHtml(a.name)+'</div>' +
+            '<div class="name">'+escapeHtml(a.name)+'<span class="status-badge '+status+'">'+STATUS_LABELS[status]+'</span></div>' +
             '<div class="email">'+escapeHtml(a.email)+'</div>' +
           '</div>' +
-          '<div style="text-align:right;">' +
-            '<div class="meta">'+escapeHtml(fmtDate(a.submittedAt))+'</div>' +
-            '<button class="del-btn" onclick="deleteApp(\''+a.id+'\')" style="margin-top:8px;">Šalinti</button>' +
-          '</div>' +
+          '<div class="meta">'+escapeHtml(fmtDate(a.submittedAt))+'</div>' +
         '</div>' +
         '<div class="field-label">Apie</div><div class="field-value">'+escapeHtml(a.about)+'</div>' +
         '<div class="field-label">Klausimas tinklui</div><div class="field-value">'+escapeHtml(a.question)+'</div>' +
         (a.invite ? '<div class="field-label">Pakvietimo kodas</div><div class="field-value">'+escapeHtml(a.invite)+'</div>' : '') +
+        '<div class="action-row">' +
+          '<button class="status-btn approve" onclick="setStatus(\''+a.id+'\',\'approved\')">Patvirtinti</button>' +
+          '<button class="status-btn reject" onclick="setStatus(\''+a.id+'\',\'rejected\')">Atmesti</button>' +
+          '<button class="del-btn" onclick="deleteApp(\''+a.id+'\')">Šalinti</button>' +
+        '</div>' +
       '</div>';
     }).join('');
+  }
+
+  async function setStatus(id, status){
+    await fetch(API.status, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id, status:status})});
+    loadAdmin();
   }
 
   async function deleteApp(id){
     await fetch(API.del, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id})});
     loadAdmin();
   }
+
+  function csvEscape(val){
+    var s = String(val==null ? '' : val);
+    if(/[",\n]/.test(s)) s = '"' + s.replace(/"/g,'""') + '"';
+    return s;
+  }
+
+  document.getElementById('search-input').addEventListener('input', applyFilters);
+  document.getElementById('status-filter').addEventListener('change', applyFilters);
+
+  document.getElementById('export-btn').addEventListener('click', function(){
+    var rows = getFiltered();
+    var header = ['Vardas','El. paštas','Apie','Klausimas','Pakvietimo kodas','Statusas','Pateikta'];
+    var lines = [header.map(csvEscape).join(',')];
+    rows.forEach(function(a){
+      lines.push([
+        a.name, a.email, a.about, a.question, a.invite || '',
+        STATUS_LABELS[a.status || 'new'], fmtDate(a.submittedAt)
+      ].map(csvEscape).join(','));
+    });
+    var csv = '﻿' + lines.join('\r\n');
+    var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'paraiskos-' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
 
   document.getElementById('login-form').addEventListener('submit', async function(e){
     e.preventDefault();

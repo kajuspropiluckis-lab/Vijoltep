@@ -18,6 +18,31 @@ async function requireAdmin(request, env) {
   return !!session;
 }
 
+async function notifyByEmail(env, record) {
+  if (!env.RESEND_API_KEY || !env.NOTIFY_EMAIL) return;
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + env.RESEND_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: env.NOTIFY_FROM || 'Reta grandis <onboarding@resend.dev>',
+        to: env.NOTIFY_EMAIL,
+        subject: 'Nauja paraiška — Reta grandis',
+        text: 'Vardas: ' + record.name + '\n' +
+              'El. paštas: ' + record.email + '\n' +
+              'Apie: ' + record.about + '\n' +
+              'Klausimas tinklui: ' + record.question + '\n' +
+              'Pakvietimo kodas: ' + (record.invite || '—')
+      })
+    });
+  } catch (e) {
+    // Nepavykus išsiųsti laiško, paraiška jau išsaugota — netrukdome pagrindiniam srautui.
+  }
+}
+
 async function handleApply(request, env) {
   let data;
   try {
@@ -48,6 +73,8 @@ async function handleApply(request, env) {
   } catch (e) {
     return json({ error: 'Nepavyko išsaugoti paraiškos. Bandykite dar kartą.' }, 500);
   }
+
+  await notifyByEmail(env, record);
 
   return json({ ok: true });
 }
@@ -90,6 +117,29 @@ async function handleAdminList(request, env) {
   return json({ applications });
 }
 
+async function handleAdminStatus(request, env) {
+  if (!(await requireAdmin(request, env))) return json({ error: 'Neprisijungta.' }, 401);
+
+  let data;
+  try { data = await request.json(); } catch (e) { data = {}; }
+  const id = data.id;
+  const status = data.status;
+  const allowed = ['new', 'approved', 'rejected'];
+  if (!id || !allowed.includes(status)) {
+    return json({ error: 'Blogi parametrai.' }, 400);
+  }
+
+  const key = 'application:' + id;
+  const value = await env.APPLICATIONS_KV.get(key);
+  if (!value) return json({ error: 'Paraiška nerasta.' }, 404);
+
+  const record = JSON.parse(value);
+  record.status = status;
+  await env.APPLICATIONS_KV.put(key, JSON.stringify(record));
+
+  return json({ ok: true, application: record });
+}
+
 async function handleAdminDelete(request, env) {
   if (!(await requireAdmin(request, env))) return json({ error: 'Neprisijungta.' }, 401);
 
@@ -112,6 +162,7 @@ export default {
     if (pathname === '/api/admin/login' && method === 'POST') return handleAdminLogin(request, env);
     if (pathname === '/api/admin/logout' && method === 'POST') return handleAdminLogout();
     if (pathname === '/api/admin/list' && method === 'GET') return handleAdminList(request, env);
+    if (pathname === '/api/admin/status' && method === 'POST') return handleAdminStatus(request, env);
     if (pathname === '/api/admin/delete' && method === 'POST') return handleAdminDelete(request, env);
 
     return json({ error: 'Not found' }, 404);
