@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Reta grandis</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1c1712">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231c1712'/%3E%3Cpath d='M12 20a5 5 0 0 1 0-8h3a1 1 0 0 1 0 2h-3a3 3 0 0 0 0 6h3a1 1 0 0 1 0 2h-3Z' fill='%23a2453f'/%3E%3Cpath d='M20 12a5 5 0 0 1 0 8h-3a1 1 0 0 1 0-2h3a3 3 0 0 0 0-6h-3a1 1 0 0 1 0-2h3Z' fill='%23a2453f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1c1712; --bg-raised:#241e17; --ink:#ede6d8; --ink-muted:#a79c8a;
+    --line:#3a322a; --accent:#a2453f; --accent-ink:#f3e2df; --ok:#4f7a5c;
+    --serif:'Fraunces',serif; --sans:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;
+  }
+  h1,h2{font-family:var(--serif);font-weight:500;margin:0;}
+  .wrap{max-width:760px;margin:0 auto;padding:40px 24px 80px;}
+
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .login-card{max-width:340px;width:100%;}
+  .login-card h1{font-size:20px;text-align:center;margin-bottom:22px;}
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:12.5px;color:var(--ink-muted);margin-bottom:6px;}
+  .field input{
+    width:100%;background:var(--bg-raised);border:1px solid var(--line);border-radius:2px;
+    padding:11px 13px;color:var(--ink);font-size:14px;font-family:var(--sans);
+  }
+  .field input:focus{outline:none;border-color:var(--ink-muted);}
+  .cta{
+    display:inline-block;background:none;color:var(--accent-ink);
+    border:1px solid var(--accent);padding:11px 20px;font-size:14px;width:100%;
+    font-family:var(--sans);font-weight:500;cursor:pointer;border-radius:2px;transition:background .15s ease;
+  }
+  .cta:hover{background:var(--accent);}
+  .cta:disabled{opacity:.5;cursor:default;}
+
+  .error-msg{
+    display:none;background:rgba(162,69,63,.15);border:1px solid var(--accent);color:var(--accent-ink);
+    font-size:13px;padding:10px 12px;border-radius:2px;margin-bottom:16px;
+  }
+  .error-msg.show{display:block;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+  .topbar h1{font-size:20px;}
+  .logout-link{background:none;border:none;color:var(--ink-muted);font-size:12.5px;cursor:pointer;text-decoration:underline;padding:0;}
+  .logout-link:hover{color:var(--ink);}
+
+  .empty-note{color:var(--ink-muted);font-size:14px;padding:30px 0;text-align:center;}
+
+  .app-card{border:1px solid var(--line);border-radius:2px;padding:20px;margin-bottom:14px;background:var(--bg-raised);}
+  .app-card .row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;}
+  .app-card .name{font-size:16.5px;}
+  .app-card .email{font-size:12.5px;color:var(--ink-muted);margin:2px 0 12px;}
+  .app-card .field-label{font-size:11.5px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 3px;}
+  .app-card .field-value{font-size:14px;}
+  .app-card .meta{font-size:11.5px;color:var(--ink-muted);white-space:nowrap;}
+  .del-btn{background:none;border:1px solid var(--line);color:var(--ink-muted);font-size:12px;padding:6px 12px;border-radius:2px;cursor:pointer;flex-shrink:0;}
+  .del-btn:hover{border-color:var(--accent);color:var(--ink);}
+
+  .loading{color:var(--ink-muted);font-size:14px;text-align:center;padding:40px 0;}
+</style>
+</head>
+<body>
+
+<div id="login-view" class="login-wrap" hidden>
+  <div class="login-card">
+    <h1>Admin prisijungimas</h1>
+    <div class="error-msg" id="login-error"></div>
+    <form id="login-form">
+      <div class="field">
+        <label for="a-password">Slaptažodis</label>
+        <input id="a-password" type="password" required autofocus>
+      </div>
+      <button type="submit" class="cta" id="login-btn">Prisijungti</button>
+    </form>
+  </div>
+</div>
+
+<div id="admin-view" class="wrap" hidden>
+  <div class="topbar">
+    <h1>Paraiškos</h1>
+    <button class="logout-link" id="logout-btn">Atsijungti</button>
+  </div>
+  <div id="applications"></div>
+</div>
+
+<div id="loading-view" class="loading">Kraunama…</div>
+
+<script>
+  var API = {
+    list: '/api/admin/list',
+    login: '/api/admin/login',
+    logout: '/api/admin/logout',
+    del: '/api/admin/delete'
+  };
+
+  function show(id){
+    ['login-view','admin-view','loading-view'].forEach(function(v){
+      document.getElementById(v).hidden = (v !== id);
+    });
+  }
+  function escapeHtml(str){ var d=document.createElement('div'); d.textContent=str||''; return d.innerHTML; }
+  function fmtDate(iso){
+    try{ return new Date(iso).toLocaleString('lt-LT'); }catch(e){ return iso; }
+  }
+
+  async function loadAdmin(){
+    show('loading-view');
+    try{
+      var res = await fetch(API.list);
+      if(res.status === 401){ show('login-view'); return; }
+      if(!res.ok) throw new Error('Nepavyko įkelti paraiškų.');
+      var data = await res.json();
+      renderApplications(data.applications || []);
+      show('admin-view');
+    }catch(e){
+      show('login-view');
+    }
+  }
+
+  function renderApplications(apps){
+    var el = document.getElementById('applications');
+    if(apps.length === 0){
+      el.innerHTML = '<p class="empty-note">Paraiškų dar nėra.</p>';
+      return;
+    }
+    el.innerHTML = apps.map(function(a){
+      return '<div class="app-card">' +
+        '<div class="row">' +
+          '<div>' +
+            '<div class="name">'+escapeHtml(a.name)+'</div>' +
+            '<div class="email">'+escapeHtml(a.email)+'</div>' +
+          '</div>' +
+          '<div style="text-align:right;">' +
+            '<div class="meta">'+escapeHtml(fmtDate(a.submittedAt))+'</div>' +
+            '<button class="del-btn" onclick="deleteApp(\''+a.id+'\')" style="margin-top:8px;">Šalinti</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="field-label">Apie</div><div class="field-value">'+escapeHtml(a.about)+'</div>' +
+        '<div class="field-label">Klausimas tinklui</div><div class="field-value">'+escapeHtml(a.question)+'</div>' +
+        (a.invite ? '<div class="field-label">Pakvietimo kodas</div><div class="field-value">'+escapeHtml(a.invite)+'</div>' : '') +
+      '</div>';
+    }).join('');
+  }
+
+  async function deleteApp(id){
+    await fetch(API.del, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id})});
+    loadAdmin();
+  }
+
+  document.getElementById('login-form').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var btn = document.getElementById('login-btn');
+    var err = document.getElementById('login-error');
+    err.classList.remove('show');
+    btn.disabled = true;
+    try{
+      var res = await fetch(API.login, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({password: document.getElementById('a-password').value})
+      });
+      var body = await res.json();
+      if(!res.ok) throw new Error(body.error || 'Neteisingas slaptažodis.');
+      document.getElementById('a-password').value = '';
+      loadAdmin();
+    }catch(e2){
+      err.textContent = e2.message;
+      err.classList.add('show');
+    }finally{
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', async function(){
+    await fetch(API.logout, {method:'POST'});
+    loadAdmin();
+  });
+
+  loadAdmin();
+</script>
+</body>
+</html>

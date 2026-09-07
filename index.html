@@ -178,6 +178,12 @@
   .form-success{display:none;padding:40px 0 0;}
   .form-success.show{display:block;}
   .form-success h3{font-size:19px;margin-bottom:8px;}
+  .form-error{
+    display:none;background:rgba(162,69,63,.15);border:1px solid var(--accent);color:var(--accent-ink);
+    font-size:13px;padding:10px 12px;border-radius:2px;margin-top:20px;
+  }
+  .form-error.show{display:block;}
+  .cta:disabled{opacity:.5;cursor:default;}
 
   @media (max-width:560px){
     .topbar{padding:12px 16px;}
@@ -322,7 +328,8 @@
               <label for="a-invite">Pakvietimo kodas <span style="opacity:.6;">(nebūtina)</span></label>
               <input id="a-invite" type="text" placeholder="Jei turite">
             </div>
-            <button type="submit" class="cta">Pateikti paraišką</button>
+            <div class="form-error" id="form-error"></div>
+            <button type="submit" class="cta" id="apply-btn">Pateikti paraišką</button>
           </form>
         </div>
         <div class="form-success" id="form-success">
@@ -421,11 +428,38 @@
     detail.classList.add('open');
   }
 
-  function submitApplication(e){
+  async function submitApplication(e){
     e.preventDefault();
-    document.getElementById('app-form').classList.add('hide');
-    document.getElementById('form-success').classList.add('show');
-    setTimeout(function(){ window.location.href = 'portalas.html'; }, 1800);
+    var btn = document.getElementById('apply-btn');
+    var errorEl = document.getElementById('form-error');
+    errorEl.classList.remove('show');
+    btn.disabled = true;
+
+    var payload = {
+      name: document.getElementById('a-name').value.trim(),
+      email: document.getElementById('a-email').value.trim(),
+      about: document.getElementById('a-about').value.trim(),
+      question: document.getElementById('a-question').value.trim(),
+      invite: document.getElementById('a-invite').value.trim()
+    };
+
+    try{
+      var res = await fetch('/api/apply', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      var body = await res.json().catch(function(){ return {}; });
+      if(!res.ok) throw new Error(body.error || 'Nepavyko pateikti paraiškos.');
+
+      document.getElementById('app-form').classList.add('hide');
+      document.getElementById('form-success').classList.add('show');
+      setTimeout(function(){ window.location.href = 'portalas.html'; }, 1800);
+    }catch(err){
+      errorEl.textContent = err.message || 'Nepavyko pateikti paraiškos. Patikrinkite interneto ryšį ir bandykite dar kartą.';
+      errorEl.classList.add('show');
+      btn.disabled = false;
+    }
   }
 </script>
 
