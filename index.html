@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reta grandis</title>
+<meta name="description" content="Privatus pakvietimų tinklas žmonėms, kuriems svarbus konkretus tikslas, o ne kontaktų kiekis.">
+<meta name="theme-color" content="#1c1712">
+<meta property="og:title" content="Reta grandis">
+<meta property="og:description" content="Erdvė pokalbiams su lygiaverčiais, o ne dar vienas kontaktų sąrašas.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231c1712'/%3E%3Cpath d='M12 20a5 5 0 0 1 0-8h3a1 1 0 0 1 0 2h-3a3 3 0 0 0 0 6h3a1 1 0 0 1 0 2h-3Z' fill='%23a2453f'/%3E%3Cpath d='M20 12a5 5 0 0 1 0 8h-3a1 1 0 0 1 0-2h3a3 3 0 0 0 0-6h-3a1 1 0 0 1 0-2h3Z' fill='%23a2453f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #1c1712;
+    --bg-raised: #241e17;
+    --ink: #ede6d8;
+    --ink-muted: #a79c8a;
+    --line: #3a322a;
+    --accent: #a2453f;
+    --accent-ink: #f3e2df;
+    --serif: 'Fraunces', serif;
+    --sans: 'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;overflow:hidden;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-wrap:break-word;
+  }
+  a{color:inherit;}
+  button{font-family:var(--sans);}
+
+  /* --- app shell: click-through sections, no page scroll --- */
+  .app{height:100%;display:flex;flex-direction:column;}
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;padding:16px 28px;
+    border-bottom:1px solid var(--line);flex-shrink:0;position:relative;
+  }
+  .brand{
+    font-family:var(--serif);font-size:15px;letter-spacing:.05em;color:var(--ink-muted);
+    flex-shrink:0;background:none;border:none;padding:0;cursor:pointer;font-weight:400;
+  }
+  .brand:hover{color:var(--ink);}
+  .menu-btn{
+    background:none;border:1px solid var(--line);border-radius:2px;width:38px;height:34px;
+    color:var(--ink-muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:border-color .15s ease,color .15s ease;
+  }
+  .menu-btn:hover, .menu-btn.active{border-color:var(--accent);color:var(--ink);}
+  .menu-panel{
+    position:absolute;top:100%;right:28px;margin-top:8px;
+    background:var(--bg-raised);border:1px solid var(--line);border-radius:2px;
+    min-width:200px;padding:6px;z-index:20;display:flex;flex-direction:column;
+    box-shadow:0 16px 40px rgba(0,0,0,.45);
+  }
+  .menu-panel[hidden]{display:none;}
+  .menu-item{
+    background:none;border:none;color:var(--ink-muted);text-align:left;
+    padding:11px 14px;font-size:14px;cursor:pointer;border-radius:2px;font-family:var(--sans);
+  }
+  .menu-item:hover{background:var(--bg);color:var(--ink);}
+  .menu-item.active{color:var(--ink);}
+
+  .sections{flex:1;overflow:hidden;position:relative;}
+  .section{display:none;height:100%;overflow-y:auto;}
+  .section.active{display:block;}
+  .section-inner{max-width:640px;margin:0 auto;padding:52px 28px 64px;}
+
+  #sec-hero .section-inner{min-height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:40px 28px;}
+  .mark{font-family:var(--serif);font-size:16px;letter-spacing:.05em;color:var(--ink-muted);margin-bottom:30px;}
+  .invite-note{font-size:13px;color:var(--ink-muted);margin:22px 0 0;}
+  h1{
+    font-family:var(--serif);font-weight:500;font-size:clamp(30px,5.5vw,46px);
+    line-height:1.15;margin:0 auto 22px;max-width:15ch;
+  }
+  .lede{font-size:18px;color:var(--ink-muted);max-width:40ch;margin:0 auto 34px;}
+  .cta{
+    display:inline-block;background:none;color:var(--accent-ink);
+    border:1px solid var(--accent);padding:13px 26px;font-size:15px;
+    font-family:var(--sans);font-weight:500;cursor:pointer;text-decoration:none;
+    border-radius:2px;transition:background .15s ease;max-width:100%;
+  }
+  .cta:hover, .cta:focus-visible{background:var(--accent);}
+  .cta.quiet{border-color:var(--line);color:var(--ink);}
+  .cta.quiet:hover{background:var(--bg-raised);}
+
+  h2{font-family:var(--serif);font-weight:500;font-size:24px;margin:0 0 8px;}
+  .section-note{color:var(--ink-muted);font-size:15px;margin:0 0 32px;max-width:48ch;}
+
+  .tags{display:flex;flex-wrap:wrap;gap:10px;}
+  .tag{
+    font-size:13.5px;padding:7px 14px;border:1px solid var(--line);
+    border-radius:2px;color:var(--ink-muted);
+  }
+
+  .timeline{
+    display:flex;flex-wrap:wrap;justify-content:space-between;
+    position:relative;gap:28px 10px;padding-top:4px;
+  }
+  .timeline::before{
+    content:'';position:absolute;top:19px;left:4px;right:4px;height:1px;background:var(--line);z-index:0;
+  }
+  .tl-step{
+    position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;
+    gap:10px;flex:1 1 0;min-width:80px;text-align:center;
+    background:none;border:none;padding:0;cursor:pointer;font-family:var(--sans);
+  }
+  .tl-dot{
+    width:30px;height:30px;border-radius:50%;background:var(--bg);flex-shrink:0;
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+    font-family:var(--serif);font-size:14px;color:var(--ink-muted);
+    transition:background .2s ease,border-color .2s ease,color .2s ease;
+  }
+  .tl-label{font-size:12.5px;color:var(--ink-muted);line-height:1.35;max-width:96px;transition:color .2s ease;}
+  .tl-step:hover .tl-dot{border-color:var(--ink-muted);}
+  .tl-step.active .tl-dot{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+  .tl-step.active .tl-label{color:var(--ink);}
+
+  .tl-detail{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease;}
+  .tl-detail-inner{overflow:hidden;}
+  .tl-detail-inner p{margin:0;padding-top:22px;color:var(--ink-muted);font-size:14.5px;max-width:48ch;}
+  .tl-detail.open{grid-template-rows:1fr;}
+
+  .membership{
+    background:var(--bg-raised);border:1px solid var(--line);
+    padding:32px;border-radius:2px;
+  }
+  .price{font-family:var(--serif);font-size:38px;margin:6px 0 4px;}
+  .price span{font-family:var(--sans);font-size:15px;color:var(--ink-muted);}
+  .trial{font-size:14px;color:var(--ink-muted);margin:0 0 24px;}
+  .membership ul{list-style:none;margin:0 0 26px;padding:0;font-size:14.5px;color:var(--ink-muted);}
+  .membership li{padding:6px 0;border-top:1px solid var(--line);}
+  .membership li:first-child{border-top:none;}
+
+  .section-foot{padding-top:28px;margin-top:28px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-muted);display:flex;gap:24px;flex-wrap:wrap;}
+
+  .entry-item{border-top:1px solid var(--line);}
+  .entry-item:last-child{border-bottom:none;}
+
+  .entry-btn{
+    display:flex;justify-content:space-between;align-items:center;gap:16px;
+    width:100%;background:none;border:none;
+    padding:20px 0;text-align:left;cursor:pointer;color:var(--ink);
+    font-family:var(--sans);
+  }
+  .entry-btn .label{font-family:var(--serif);font-size:17px;}
+  .entry-btn .teaser{color:var(--ink-muted);font-size:14px;}
+  .entry-btn .plus{color:var(--ink-muted);font-size:20px;line-height:1;flex-shrink:0;transition:transform .2s ease;}
+  .entry-btn:hover .plus, .entry-btn:focus-visible .plus{color:var(--ink);}
+  .entry-item.open .plus{transform:rotate(45deg);}
+
+  .entry-detail{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease;}
+  .entry-detail-inner{overflow:hidden;}
+  .entry-detail-inner p{margin:0;padding:0 0 20px;color:var(--ink-muted);font-size:14.5px;max-width:44ch;}
+  .entry-item.open .entry-detail{grid-template-rows:1fr;}
+
+  .app-form{margin-top:52px;max-width:440px;}
+  .app-form.hide{display:none;}
+  .app-form h3{font-size:19px;margin:0 0 6px;}
+  .field{margin:24px 0 0;text-align:left;}
+  .field label{display:block;font-size:12.5px;color:var(--ink-muted);margin-bottom:6px;}
+  .field input, .field textarea{
+    width:100%;background:var(--bg-raised);border:1px solid var(--line);border-radius:2px;
+    padding:11px 13px;color:var(--ink);font-size:14px;font-family:var(--sans);resize:vertical;
+  }
+  .field input:focus, .field textarea:focus{outline:none;border-color:var(--ink-muted);}
+  .app-form .cta{margin-top:26px;width:100%;text-align:center;border:none;background:none;}
+  .app-form button.cta{border:1px solid var(--accent);}
+  .form-success{display:none;padding:40px 0 0;}
+  .form-success.show{display:block;}
+  .form-success h3{font-size:19px;margin-bottom:8px;}
+
+  @media (max-width:560px){
+    .topbar{padding:12px 16px;}
+    .menu-panel{right:16px;}
+    .section-inner{padding:36px 20px 48px;}
+    .timeline{gap:14px 4px;}
+    .timeline::before{top:13px;}
+    .tl-step{gap:6px;min-width:0;}
+    .tl-dot{width:24px;height:24px;font-size:12px;}
+    .tl-label{font-size:10.5px;line-height:1.25;max-width:58px;}
+    .membership{padding:24px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <button type="button" class="brand" onclick="selectMenu('hero')">Reta grandis</button>
+    <button class="menu-btn" id="menu-btn" onclick="toggleMenu()" aria-label="Meniu" aria-expanded="false">☰</button>
+    <div class="menu-panel" id="menu-panel" hidden>
+      <button class="menu-item active" data-sec="hero" onclick="selectMenu('hero')">Pradžia</button>
+      <button class="menu-item" data-sec="diff" onclick="selectMenu('diff')">Kuo skiriasi</button>
+      <button class="menu-item" data-sec="micro" onclick="selectMenu('micro')">Bendruomenės</button>
+      <button class="menu-item" data-sec="paraiska" onclick="selectMenu('paraiska')">Paraiška</button>
+      <button class="menu-item" data-sec="narystis" onclick="selectMenu('narystis')">Narystė</button>
+    </div>
+  </div>
+
+  <div class="sections">
+
+    <section id="sec-hero" class="section active">
+      <div class="section-inner">
+        <div class="mark">Reta grandis</div>
+        <h1>Tinklas, kuriame svarbus ne turtas, o tikslas</h1>
+        <p class="lede">Erdvė pokalbiams su lygiaverčiais, o ne dar vienas kontaktų sąrašas.</p>
+        <button type="button" class="cta" onclick="switchSection('paraiska')">Prašyti prieigos</button>
+        <p class="invite-note">Prieiga tik pagal pakvietimą arba patvirtintą paraišką</p>
+      </div>
+    </section>
+
+    <section id="sec-diff" class="section">
+      <div class="section-inner">
+        <h2>Kuo tai skiriasi</h2>
+        <p class="section-note">Keturi principai, kuriais tinklas skiriasi nuo įprastų verslo bendruomenių.</p>
+
+        <div class="entry-item">
+          <button class="entry-btn" onclick="toggleEntry(this)" aria-expanded="false">
+            <span><span class="label">AI atitikmenys</span><br><span class="teaser">Jus randa, ne jūs ieškote</span></span>
+            <span class="plus" aria-hidden="true">+</span>
+          </button>
+          <div class="entry-detail"><div class="entry-detail-inner"><p>Algoritmas pats siūlo, su kuo susitikti, remdamasis tuo, ko panašūs žmonės ieškojo anksčiau — jūs tiesiog įrašote savo pasiekimus, ne pildote paieškos formą.</p></div></div>
+        </div>
+        <div class="entry-item">
+          <button class="entry-btn" onclick="toggleEntry(this)" aria-expanded="false">
+            <span><span class="label">Vieno klausimo tinklas</span><br><span class="teaser">1–3 patikrinti žmonės, ne minia</span></span>
+            <span class="plus" aria-hidden="true">+</span>
+          </button>
+          <div class="entry-detail"><div class="entry-detail-inner"><p>Užduodate specifinį klausimą ir gaunate prieigą prie 1–3 patvirtintų žmonių, kurie tikrai tinka, ne prie viso tinklo.</p></div></div>
+        </div>
+        <div class="entry-item">
+          <button class="entry-btn" onclick="toggleEntry(this)" aria-expanded="false">
+            <span><span class="label">Interesų segmentai</span><br><span class="teaser">Ne pagal turto lygį</span></span>
+            <span class="plus" aria-hidden="true">+</span>
+          </button>
+          <div class="entry-detail"><div class="entry-detail-inner"><p>Grupavimas pagal siaurus, konkrečius siekius, ne pagal turto lygį, kaip įprasta YPO ar Tiger 21 tipo tinkluose.</p></div></div>
+        </div>
+        <div class="entry-item">
+          <button class="entry-btn" onclick="toggleEntry(this)" aria-expanded="false">
+            <span><span class="label">Dėmesio kaina</span><br><span class="teaser">Kontaktas turi ką nors kainuoti</span></span>
+            <span class="plus" aria-hidden="true">+</span>
+          </button>
+          <div class="entry-detail"><div class="entry-detail-inner"><p>Norint susisiekti su konkrečiu žmogumi, reikia pasiūlyti kažką vertingo. Tai atfiltruoja atsitiktinius prašymus ir palieka tik rimtus.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sec-micro" class="section">
+      <div class="section-inner">
+        <h2>Mikro-bendruomenės</h2>
+        <p class="section-note">Nedidelės, laikinos grupės tiems, kas šiuo metu sprendžia tą pačią problemą.</p>
+        <div class="tags">
+          <span class="tag">founderiai po exit’o</span>
+          <span class="tag">investuotojai į climate tech</span>
+          <span class="tag">verslo paveldėtojai</span>
+          <span class="tag">pasitraukę iš valdybų</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="sec-paraiska" class="section">
+      <div class="section-inner">
+        <h2>Paraiškos eiga</h2>
+        <p class="section-note">Nuo paraiškos iki patvirtintos narystės — penki žingsniai.</p>
+        <div class="timeline">
+          <button class="tl-step" onclick="selectStep(this,1)" aria-expanded="false">
+            <span class="tl-dot">1</span>
+            <span class="tl-label">Paraiška</span>
+          </button>
+          <button class="tl-step" onclick="selectStep(this,2)" aria-expanded="false">
+            <span class="tl-dot">2</span>
+            <span class="tl-label">Automatinis patikrinimas</span>
+          </button>
+          <button class="tl-step" onclick="selectStep(this,3)" aria-expanded="false">
+            <span class="tl-dot">3</span>
+            <span class="tl-label">Žmogaus peržiūra</span>
+          </button>
+          <button class="tl-step" onclick="selectStep(this,4)" aria-expanded="false">
+            <span class="tl-dot">4</span>
+            <span class="tl-label">Tapatybės patvirtinimas</span>
+          </button>
+          <button class="tl-step" onclick="selectStep(this,5)" aria-expanded="false">
+            <span class="tl-dot">5</span>
+            <span class="tl-label">Patvirtinta narystė</span>
+          </button>
+        </div>
+        <div class="tl-detail" id="tl-detail">
+          <div class="tl-detail-inner"><p id="tl-detail-text"></p></div>
+        </div>
+
+        <div class="app-form" id="app-form">
+          <h3>Pateikti paraišką</h3>
+          <p class="section-note">Užpildykite trumpai — pirmą žingsnį (automatinį patikrinimą) atliksime per kelias darbo dienas.</p>
+          <form onsubmit="submitApplication(event)">
+            <div class="field">
+              <label for="a-name">Vardas ir pavardė</label>
+              <input id="a-name" type="text" required placeholder="Jūsų vardas">
+            </div>
+            <div class="field">
+              <label for="a-email">El. paštas</label>
+              <input id="a-email" type="email" required placeholder="jusu@pastas.lt">
+            </div>
+            <div class="field">
+              <label for="a-about">Kuo užsiimate ir ką esate pasiekę</label>
+              <textarea id="a-about" rows="3" required placeholder="Trumpai apie save ir pasiekimus"></textarea>
+            </div>
+            <div class="field">
+              <label for="a-question">Koks jūsų klausimas tinklui?</label>
+              <input id="a-question" type="text" required placeholder="Ką norėtumėte išsiaiškinti per šį tinklą?">
+            </div>
+            <div class="field">
+              <label for="a-invite">Pakvietimo kodas <span style="opacity:.6;">(nebūtina)</span></label>
+              <input id="a-invite" type="text" placeholder="Jei turite">
+            </div>
+            <button type="submit" class="cta">Pateikti paraišką</button>
+          </form>
+        </div>
+        <div class="form-success" id="form-success">
+          <h3>Paraiška gauta</h3>
+          <p class="section-note">Peržiūrėsime jūsų paraišką ir susisieksime el. paštu per kelias darbo dienas.</p>
+          <p class="section-note" style="font-size:13px;margin-top:-16px;">Kol laukiate — trumpai parodysime, kaip atrodys jūsų portalas…</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="sec-narystis" class="section">
+      <div class="section-inner">
+        <h2>Narystė</h2>
+        <div class="membership">
+          <p class="price">8,49 € <span>/ mėn</span></p>
+          <p class="trial">3 dienų nemokamas bandomasis laikotarpis</p>
+          <ul>
+            <li>Neribotas bendravimas</li>
+            <li>Jokių atsitiktinių profilių — visi patvirtinti</li>
+            <li>Prieiga prie mikro-bendruomenių</li>
+          </ul>
+          <button type="button" class="cta quiet" onclick="switchSection('paraiska')">Pradėti bandomąjį laikotarpį</button>
+        </div>
+        <div class="section-foot">
+          <span>Kiekvieno nario tapatybė patvirtinta</span>
+          <span>Jūsų duomenys niekam neperduodami</span>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+  function switchSection(name){
+    document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); s.scrollTop = 0; });
+    document.querySelectorAll('.menu-item').forEach(function(b){ b.classList.remove('active'); });
+    document.getElementById('sec-'+name).classList.add('active');
+    document.querySelector('.menu-item[data-sec="'+name+'"]').classList.add('active');
+  }
+
+  function toggleMenu(force){
+    var panel = document.getElementById('menu-panel');
+    var btn = document.getElementById('menu-btn');
+    var show = typeof force === 'boolean' ? force : panel.hidden;
+    panel.hidden = !show;
+    btn.classList.toggle('active', show);
+    btn.setAttribute('aria-expanded', show);
+  }
+  function selectMenu(name){
+    switchSection(name);
+    toggleMenu(false);
+  }
+  document.addEventListener('click', function(e){
+    var panel = document.getElementById('menu-panel');
+    var btn = document.getElementById('menu-btn');
+    if(!panel.hidden && !panel.contains(e.target) && e.target !== btn){
+      toggleMenu(false);
+    }
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape') toggleMenu(false);
+  });
+
+  function toggleEntry(btn){
+    var item = btn.closest('.entry-item');
+    var isOpen = item.classList.toggle('open');
+    btn.setAttribute('aria-expanded', isOpen);
+  }
+
+  var stepDetails = {
+    1: "Profilis, pasiekimai ir, jei yra, esamo nario rekomendacija.",
+    2: "Sutikrinami vieši duomenys: LinkedIn, verslo registrai, žiniasklaidos minėjimai.",
+    3: "Neaiškūs ar itin įdomūs atvejai patenka pas nedidelį komitetą.",
+    4: "ID dokumentas ir trumpas vaizdo skambutis prieš suteikiant prieigą.",
+    5: "Prieiga prie tinklo, pradinis interesų profilis ir pirmieji atitikmenys."
+  };
+  var activeStep = null;
+  function selectStep(btn, n){
+    var timeline = btn.closest('.timeline');
+    var detail = document.getElementById('tl-detail');
+    var text = document.getElementById('tl-detail-text');
+    var steps = timeline.querySelectorAll('.tl-step');
+
+    if(activeStep === n){
+      activeStep = null;
+      detail.classList.remove('open');
+      steps.forEach(function(s){ s.classList.remove('active'); s.setAttribute('aria-expanded','false'); });
+      return;
+    }
+    activeStep = n;
+    steps.forEach(function(s){ s.classList.remove('active'); s.setAttribute('aria-expanded','false'); });
+    btn.classList.add('active');
+    btn.setAttribute('aria-expanded','true');
+    text.textContent = stepDetails[n];
+    detail.classList.add('open');
+  }
+
+  function submitApplication(e){
+    e.preventDefault();
+    document.getElementById('app-form').classList.add('hide');
+    document.getElementById('form-success').classList.add('show');
+    setTimeout(function(){ window.location.href = 'portalas.html'; }, 1800);
+  }
+</script>
+
+</body>
+</html>

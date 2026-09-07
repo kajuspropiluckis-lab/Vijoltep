@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reta grandis — Portalas</title>
+<meta name="description" content="Jūsų atitikmenys, pokalbiai ir profilis tinkle Reta grandis.">
+<meta name="theme-color" content="#1c1712">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231c1712'/%3E%3Cpath d='M12 20a5 5 0 0 1 0-8h3a1 1 0 0 1 0 2h-3a3 3 0 0 0 0 6h3a1 1 0 0 1 0 2h-3Z' fill='%23a2453f'/%3E%3Cpath d='M20 12a5 5 0 0 1 0 8h-3a1 1 0 0 1 0-2h3a3 3 0 0 0 0-6h-3a1 1 0 0 1 0-2h3Z' fill='%23a2453f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1c1712; --bg-raised:#241e17; --ink:#ede6d8; --ink-muted:#a79c8a;
+    --line:#3a322a; --accent:#a2453f; --accent-ink:#f3e2df;
+    --serif:'Fraunces',serif; --sans:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;overflow-x:hidden;}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    line-height:1.5;-webkit-font-smoothing:antialiased;overflow-wrap:break-word;
+  }
+  h1,h2,h3{font-family:var(--serif);font-weight:500;margin:0;}
+  button, input, textarea{font-family:var(--sans);}
+
+  html:not(.authed) .app{display:none;}
+  html.authed .auth-gate{display:none;}
+  .auth-gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;}
+  .auth-card{max-width:380px;width:100%;}
+  .auth-mark{font-family:var(--serif);font-size:15px;letter-spacing:.05em;color:var(--ink-muted);text-align:center;margin-bottom:18px;}
+  .auth-card h1{font-size:23px;margin:0 0 8px;text-align:center;}
+  .auth-card > p{color:var(--ink-muted);font-size:14px;text-align:center;margin:0 0 28px;}
+  .auth-card .cta{width:100%;text-align:center;margin-top:6px;}
+  .auth-back{font-size:12.5px;color:var(--ink-muted);text-align:center;margin-top:20px;}
+  .auth-back a{color:inherit;text-decoration:underline;}
+
+  .app{height:100vh;display:flex;flex-direction:column;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 22px;border-bottom:1px solid var(--line);flex-shrink:0;}
+  .brand{font-family:var(--serif);font-size:15px;letter-spacing:.03em;color:var(--ink-muted);text-decoration:none;transition:color .15s ease;}
+  a.brand:hover{color:var(--ink);}
+  .profile-icon{
+    background:none;border:1px solid var(--line);border-radius:50%;
+    width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+    font-size:16px;cursor:pointer;color:var(--ink-muted);line-height:1;
+  }
+  .profile-icon:hover, .profile-icon.active{border-color:var(--accent);color:var(--ink);}
+  .topsearch{
+    flex:1;max-width:440px;background:var(--bg-raised);border:1px solid var(--line);
+    border-radius:20px;padding:9px 16px;color:var(--ink);font-size:13.5px;min-width:0;
+  }
+  .topsearch:focus{outline:none;border-color:var(--ink-muted);}
+  .topsearch::placeholder{color:var(--ink-muted);opacity:.75;}
+
+  .body{flex:1;display:flex;overflow:hidden;}
+
+  .sidenav{width:190px;flex-shrink:0;border-right:1px solid var(--line);display:flex;flex-direction:column;padding:16px 0;}
+  .nav-item{background:none;border:none;border-left:2px solid transparent;color:var(--ink-muted);text-align:left;padding:12px 22px;font-size:14.5px;cursor:pointer;}
+  .nav-item:hover{color:var(--ink);}
+  .nav-item.active{color:var(--ink);border-left-color:var(--accent);background:var(--bg-raised);}
+
+  .content{flex:1;overflow-y:auto;min-width:0;}
+  .tab{display:none;padding:34px;max-width:640px;}
+  .tab.active{display:block;}
+  .tab h2{font-size:22px;margin-bottom:6px;}
+  .tab-note{color:var(--ink-muted);font-size:14px;margin:0 0 26px;}
+
+  .cta{
+    display:inline-block;background:none;color:var(--accent-ink);
+    border:1px solid var(--accent);padding:9px 18px;font-size:13.5px;
+    font-weight:500;cursor:pointer;border-radius:2px;transition:background .15s ease;max-width:100%;
+  }
+  .cta:hover{background:var(--accent);}
+
+  /* --- home: watermark + category tiles --- */
+  .home-wrap{position:relative;}
+  .home-watermark{
+    position:absolute;top:-6px;left:0;right:0;text-align:center;
+    font-family:var(--serif);font-size:clamp(30px,7vw,58px);color:var(--line);
+    line-height:1;white-space:nowrap;overflow:hidden;pointer-events:none;user-select:none;z-index:0;
+  }
+  .home-content{position:relative;z-index:1;}
+  .hidden{display:none;}
+  .onboarding{max-width:420px;padding:28px;border:1px solid var(--line);border-radius:2px;background:var(--bg-raised);}
+  .onboarding h2{font-size:20px;margin-bottom:8px;}
+
+  .tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;}
+  .tile{
+    aspect-ratio:1;border:1px solid var(--line);border-radius:2px;background:var(--bg-raised);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+    padding:14px;cursor:pointer;gap:6px;transition:border-color .15s ease,background .15s ease;
+  }
+  .tile:hover{border-color:var(--ink-muted);}
+  .tile.active{border-color:var(--accent);background:var(--accent);}
+  .tile.active .tile-name, .tile.active .tile-count{color:var(--accent-ink);}
+  .tile-name{font-family:var(--serif);font-size:14.5px;line-height:1.3;}
+  .tile-count{font-size:11.5px;color:var(--ink-muted);}
+
+  .tile-detail{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease;}
+  .tile-detail.open{grid-template-rows:1fr;margin-top:22px;}
+  .tile-detail-inner{overflow:hidden;}
+
+  /* --- match / result cards (home + search) --- */
+  .match-card{border:1px solid var(--line);border-radius:2px;padding:18px;margin-bottom:14px;background:var(--bg-raised);}
+  .match-card .name{font-size:16.5px;}
+  .match-card .tag{font-size:12px;color:var(--ink-muted);margin:2px 0 10px;}
+  .match-card .reason{font-size:13.5px;color:var(--ink-muted);margin:0 0 14px;max-width:44ch;}
+
+  /* --- search --- */
+  .search-box{display:flex;gap:10px;margin-bottom:28px;}
+  .search-box input{flex:1;background:var(--bg-raised);border:1px solid var(--line);border-radius:6px;padding:11px 13px;color:var(--ink);font-size:14px;}
+  .search-box input:focus{outline:none;border-color:var(--ink-muted);}
+  .search-results-note{font-size:13.5px;color:var(--ink-muted);margin:0 0 16px;}
+
+  /* --- profile --- */
+  .field{margin-bottom:20px;}
+  .field label{display:block;font-size:12.5px;color:var(--ink-muted);margin-bottom:6px;}
+  .field input, .field textarea{
+    width:100%;background:var(--bg-raised);border:1px solid var(--line);border-radius:6px;
+    padding:11px 13px;color:var(--ink);font-size:14px;resize:vertical;
+  }
+  .field input:focus, .field textarea:focus{outline:none;border-color:var(--ink-muted);}
+  .save-note{font-size:12.5px;color:var(--ink-muted);margin-left:12px;opacity:0;transition:opacity .3s ease;}
+  .save-note.show{opacity:1;}
+
+  /* --- chat (nested inside Pokalbiai tab) --- */
+  #tab-chat{padding:0;max-width:none;height:100%;display:none;}
+  #tab-chat.active{display:flex;}
+  .chat-sidebar{width:280px;flex-shrink:0;border-right:1px solid var(--line);overflow-y:auto;}
+  .chat-conv{display:flex;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);cursor:pointer;align-items:flex-start;}
+  .chat-conv:hover, .chat-conv.active{background:var(--bg-raised);}
+  .avatar{width:36px;height:36px;border-radius:50%;background:var(--bg-raised);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:14px;flex-shrink:0;}
+  .chat-conv.active .avatar{border-color:var(--accent);color:var(--accent-ink);background:var(--accent);}
+  .chat-conv-body{flex:1;min-width:0;}
+  .chat-conv-top{display:flex;justify-content:space-between;gap:8px;}
+  .chat-conv-name{font-size:14px;font-weight:500;}
+  .chat-conv-time{font-size:10.5px;color:var(--ink-muted);white-space:nowrap;}
+  .chat-conv-tag{font-size:11px;color:var(--ink-muted);margin-top:1px;}
+  .chat-conv-preview{font-size:12.5px;color:var(--ink-muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  .chat-thread{flex:1;display:flex;flex-direction:column;min-width:0;}
+  .chat-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--ink-muted);font-size:14px;text-align:center;padding:40px;}
+  .chat-header{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);flex-shrink:0;}
+  .chat-back{display:none;background:none;border:none;color:var(--ink-muted);font-size:22px;cursor:pointer;padding:0 4px 0 0;line-height:1;}
+  .chat-header .chat-conv-name{font-family:var(--serif);font-size:16px;}
+  .chat-header .chat-conv-tag{font-size:12px;}
+
+  .chat-messages{flex:1;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:12px;}
+  .chat-msg{max-width:72%;padding:10px 14px;border-radius:10px;font-size:14px;line-height:1.5;}
+  .chat-msg.them{align-self:flex-start;background:var(--bg-raised);border:1px solid var(--line);border-bottom-left-radius:2px;}
+  .chat-msg.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:2px;}
+  .chat-msg-time{display:block;font-size:10px;margin-top:5px;opacity:.7;}
+
+  .chat-composer{display:flex;gap:10px;padding:16px 20px;border-top:1px solid var(--line);flex-shrink:0;}
+  .chat-composer textarea{flex:1;resize:none;background:var(--bg-raised);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:11px 13px;font-size:14px;height:44px;}
+  .chat-composer textarea:focus{outline:none;border-color:var(--ink-muted);}
+
+  .reset-link{font-size:12px;color:var(--ink-muted);background:none;border:none;cursor:pointer;text-decoration:underline;padding:0;}
+  .reset-link:hover{color:var(--ink);}
+  .loading{padding:34px;color:var(--ink-muted);font-size:14px;}
+
+  @media (max-width:760px){
+    .body{flex-direction:column;}
+    .content{order:1;}
+    .sidenav{
+      order:2;width:100%;flex-direction:row;border-right:none;border-top:1px solid var(--line);
+      padding:4px 0;justify-content:space-around;
+    }
+    .nav-item{flex:1;text-align:center;padding:10px 4px;font-size:12px;border-left:none;border-top:2px solid transparent;}
+    .nav-item.active{border-left:none;border-top-color:var(--accent);background:none;}
+    .tab{padding:22px;}
+    .topbar{flex-wrap:wrap;padding:12px 16px;gap:10px;}
+    .brand{order:1;}
+    .profile-icon{order:2;margin-left:auto;}
+    .topsearch{order:3;flex:1 0 100%;max-width:none;}
+
+    #tab-chat.view-thread .chat-sidebar{display:none;}
+    #tab-chat.view-list .chat-thread{display:none;}
+    .chat-back{display:inline-block;}
+  }
+</style>
+</head>
+<body>
+<script>
+  if(localStorage.getItem('reta-grandis-account-v1')) document.documentElement.classList.add('authed');
+</script>
+
+<div class="auth-gate" id="auth-gate">
+  <div class="auth-card">
+    <div class="auth-mark">Reta grandis</div>
+    <h1>Susikurkite paskyrą</h1>
+    <p>Bandomasis laikotarpis prasideda susikūrus paskyrą.</p>
+    <form onsubmit="registerAccount(event)">
+      <div class="field">
+        <label for="r-name">Vardas</label>
+        <input id="r-name" type="text" required placeholder="Jūsų vardas">
+      </div>
+      <div class="field">
+        <label for="r-email">El. paštas</label>
+        <input id="r-email" type="email" required placeholder="jusu@pastas.lt">
+      </div>
+      <div class="field">
+        <label for="r-password">Slaptažodis</label>
+        <input id="r-password" type="password" required minlength="6" placeholder="Bent 6 simboliai">
+      </div>
+      <button type="submit" class="cta">Sukurti paskyrą ir pradėti</button>
+    </form>
+    <p class="auth-back">Grįžti į <a href="index.html">pradinį puslapį</a></p>
+  </div>
+</div>
+
+<div class="app">
+  <div class="topbar">
+    <a class="brand" href="index.html">Reta grandis</a>
+    <input class="topsearch" id="search-input" type="text" placeholder="Ko ieškote? Pvz.: kas išmano baterijų perdirbimą" onkeydown="if(event.key==='Enter')runSearch()">
+    <button class="profile-icon" data-tab="profile" onclick="switchTab('profile')" aria-label="Profilis">👤</button>
+  </div>
+  <div class="body">
+    <nav class="sidenav">
+      <button class="nav-item active" data-tab="home" onclick="switchTab('home')">Pradžia</button>
+      <button class="nav-item" data-tab="chat" onclick="switchTab('chat')">💬 Pokalbiai</button>
+    </nav>
+
+    <div class="content">
+      <section id="tab-home" class="tab active">
+        <div class="home-wrap">
+          <div class="home-watermark">Reta grandis</div>
+          <div class="home-content">
+            <div class="onboarding" id="onboarding">
+              <h2>Pirmiausia — užpildykite profilį</h2>
+              <p class="tab-note">Kad algoritmas galėtų parinkti tinkamus žmones, trumpai papasakokite apie save ir savo klausimą tinklui.</p>
+              <button class="cta" onclick="switchTab('profile')">Užpildyti profilį</button>
+            </div>
+            <div class="home-feed hidden" id="home-feed">
+              <h2>Jums siūloma</h2>
+              <p class="tab-note">Pasirinkite sritį, kad pamatytumėte joje siūlomus žmones.</p>
+              <div class="tile-grid" id="tile-grid"></div>
+              <div class="tile-detail" id="tile-detail"><div class="tile-detail-inner" id="tile-detail-inner"></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-search" class="tab">
+        <h2>Paieškos rezultatai</h2>
+        <p class="tab-note">Užuot rodę visą tinklą, parenkame kelis žmones, kurie tikrai galėtų atsakyti.</p>
+        <div id="search-results"></div>
+      </section>
+
+      <section id="tab-chat" class="tab view-list">
+        <div class="loading">Kraunama…</div>
+      </section>
+
+      <section id="tab-profile" class="tab">
+        <h2>Jūsų profilis</h2>
+        <p class="tab-note">Pagal šiuos duomenis jums parenkami tinkami žmonės.</p>
+        <div class="field">
+          <label for="p-name">Vardas</label>
+          <input id="p-name" type="text" placeholder="Jūsų vardas">
+        </div>
+        <div class="field">
+          <label for="p-about">Apie jus</label>
+          <textarea id="p-about" rows="3" placeholder="Trumpai — kuo užsiimate ir ką esate pasiekę"></textarea>
+        </div>
+        <div class="field">
+          <label for="p-tags">Mikro-bendruomenės (atskirkite kableliais)</label>
+          <input id="p-tags" type="text" placeholder="pvz.: founderiai po exit’o, investuotojai į climate tech">
+        </div>
+        <div class="field">
+          <label for="p-question">Koks jūsų klausimas tinklui?</label>
+          <input id="p-question" type="text" placeholder="Ką norėtumėte išsiaiškinti per šį tinklą?">
+        </div>
+        <button class="cta" onclick="saveProfile()">Išsaugoti</button>
+        <span class="save-note" id="save-note">Išsaugota</span>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- saugykla: veikia ir realiame tinklalapyje ---------- */
+var store = (function(){
+  var hasClaude = (typeof window !== 'undefined') && window.storage && typeof window.storage.get === 'function';
+  return {
+    get: async function(key){
+      if(hasClaude) return await window.storage.get(key, false);
+      var v = localStorage.getItem(key);
+      if(v === null) throw new Error('not found');
+      return {key:key, value:v};
+    },
+    set: async function(key, value){
+      if(hasClaude) return await window.storage.set(key, value, false);
+      localStorage.setItem(key, value);
+      return {key:key, value:value};
+    }
+  };
+})();
+
+/* ---------- shared data ---------- */
+var CHAT_KEY = 'reta-grandis-chat-v1';
+var PROFILE_KEY = 'reta-grandis-profile-v1';
+var ACCOUNT_KEY = 'reta-grandis-account-v1';
+
+function registerAccount(e){
+  e.preventDefault();
+  var name = document.getElementById('r-name').value.trim();
+  var email = document.getElementById('r-email').value.trim();
+  try{ localStorage.setItem(ACCOUNT_KEY, JSON.stringify({name:name, email:email})); }catch(err){}
+  document.documentElement.classList.add('authed');
+  var pName = document.getElementById('p-name');
+  if(pName && !pName.value) pName.value = name;
+}
+
+var people = [
+  {id:'m1', name:'Tomas B.', tag:'investuotojai į climate tech', reason:'Siūlomas, nes neseniai investavote į panašią sritį.', keywords:['klimat','baterij','tech']},
+  {id:'m2', name:'Justina P.', tag:'founderiai po exit’o', reason:'Siūloma, nes abu ieškote naujo tikslo po verslo pardavimo.', keywords:['exit','pardav','tiksl']},
+  {id:'m3', name:'Rokas L.', tag:'verslo paveldėtojai', reason:'Siūlomas, nes abu domitės šeimos verslo perdavimu kitai kartai.', keywords:['paveld','šeimos','perdavim']},
+  {id:'m4', name:'Eglė S.', tag:'investuotojai į climate tech', reason:'Siūloma, nes taip pat aktyviai investuoja į atsinaujinančią energetiką.', keywords:['energetik','saul','klimat']},
+  {id:'m5', name:'Nedas V.', tag:'founderiai po exit’o', reason:'Siūlomas, nes pardavė savo verslą pernai ir dabar renkasi naują kryptį.', keywords:['exit','startuol','kryp']},
+  {id:'m6', name:'Giedrė T.', tag:'verslo paveldėtojai', reason:'Siūloma, nes taip pat perima šeimos verslą iš tėvų.', keywords:['paveld','tėv','verslo']},
+  {id:'m7', name:'Vaidas K.', tag:'pasitraukę iš valdybų', reason:'Siūlomas, nes neseniai paliko valdybos narystę ir ieško naujo užsiėmimo.', keywords:['valdyb','pasitrauk','direktori']}
+];
+
+var seedChat = [
+  {id:'c1', name:'Dovilė R.', tag:'founderiai po exit’o', messages:[
+    {from:'them', text:'Sveiki — mačiau, kad irgi šiemet pardavei verslą. Kaip sekasi ieškotis naujo tikslo?', time:'vakar 21:14'},
+    {from:'me', text:'Tiesą sakant, dar ieškau. Kol kas daugiausia laiko skiriu angel investavimui.', time:'vakar 21:40'},
+    {from:'them', text:'Panašiai ir aš. Gal susitinkam kavos, pasidalinsim užrašais?', time:'vakar 21:42'}
+  ]},
+  {id:'c2', name:'Marius K.', tag:'investuotojai į climate tech', messages:[
+    {from:'them', text:'Laba diena. Radau jūsų profilį per atitikmenų sistemą — domitės baterijų perdirbimu?', time:'pirmadienį 09:03'},
+    {from:'me', text:'Taip, būtent tuo šiuo metu ir domiuosi.', time:'pirmadienį 10:12'}
+  ]},
+  {id:'c3', name:'Vaidas K.', tag:'pasitraukę iš valdybų', messages:[
+    {from:'them', text:'Sveiki — mačiau, kad irgi neseniai palikote valdybos narystę. Kaip sekasi rasti, kuo dabar užsiimti?', time:'prieš 2 dienas'},
+    {from:'me', text:'Vis dar ieškau, bet jau turiu keletą minčių. O jums?', time:'prieš 2 dienas'},
+    {from:'them', text:'Panašiai — svarstau patarėjo vaidmenis vienoje-dviejose bendrovėse.', time:'vakar 08:47'}
+  ]}
+];
+
+var chatState = { conversations: [], activeId: null };
+var profileComplete = false;
+
+function updateHomeView(){
+  var onboarding = document.getElementById('onboarding');
+  var feed = document.getElementById('home-feed');
+  onboarding.classList.toggle('hidden', profileComplete);
+  feed.classList.toggle('hidden', !profileComplete);
+}
+
+function initials(name){ return name.split(' ').map(function(p){return p[0];}).join('').slice(0,2).toUpperCase(); }
+function plural(n, one, few, many){
+  var last = n % 10, lastTwo = n % 100;
+  if(lastTwo >= 11 && lastTwo <= 19) return many;
+  if(last === 1) return one;
+  if(last === 0) return many;
+  return few;
+}
+function escapeHtml(str){ var d=document.createElement('div'); d.textContent=str; return d.innerHTML; }
+
+/* ---------- tabs ---------- */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.nav-item, .profile-icon').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('tab-'+name).classList.add('active');
+  var navBtn = document.querySelector('[data-tab="'+name+'"]');
+  if(navBtn) navBtn.classList.add('active');
+}
+
+/* ---------- home feed: category tiles ---------- */
+var activeCategory = null;
+var categoryTags = [];
+
+function getCategories(){
+  var map = {};
+  people.forEach(function(p){
+    if(!map[p.tag]) map[p.tag] = [];
+    map[p.tag].push(p);
+  });
+  return map;
+}
+
+function renderFeed(){
+  var categories = getCategories();
+  categoryTags = Object.keys(categories);
+  var grid = document.getElementById('tile-grid');
+  grid.innerHTML = categoryTags.map(function(tag, i){
+    var count = categories[tag].length;
+    var activeClass = tag === activeCategory ? ' active' : '';
+    return '<div class="tile'+activeClass+'" onclick="selectCategoryByIndex('+i+')">' +
+      '<div class="tile-name">'+escapeHtml(tag)+'</div>' +
+      '<div class="tile-count">'+count+' '+plural(count, 'žmogus', 'žmonės', 'žmonių')+'</div>' +
+    '</div>';
+  }).join('');
+  renderCategoryDetail();
+}
+
+function selectCategoryByIndex(i){
+  var tag = categoryTags[i];
+  activeCategory = (activeCategory === tag) ? null : tag;
+  renderFeed();
+}
+
+function renderCategoryDetail(){
+  var wrap = document.getElementById('tile-detail');
+  var inner = document.getElementById('tile-detail-inner');
+  if(!activeCategory){
+    wrap.classList.remove('open');
+    inner.innerHTML = '';
+    return;
+  }
+  var categories = getCategories();
+  var list = categories[activeCategory] || [];
+  inner.innerHTML = list.map(function(p){
+    return '<div class="match-card">' +
+      '<div class="name">'+escapeHtml(p.name)+'</div>' +
+      '<p class="reason">'+escapeHtml(p.reason)+'</p>' +
+      '<button class="cta" onclick="startChatWith(\''+p.id+'\')">Pradėti pokalbį</button>' +
+    '</div>';
+  }).join('');
+  wrap.classList.add('open');
+}
+
+/* ---------- search ---------- */
+function runSearch(){
+  var q = document.getElementById('search-input').value.trim();
+  var el = document.getElementById('search-results');
+  if(!q){ el.innerHTML = ''; return; }
+  var qLower = q.toLowerCase();
+  var matches = people.filter(function(p){
+    return p.keywords.some(function(k){ return qLower.indexOf(k) !== -1; });
+  });
+  var noExactMatch = matches.length === 0;
+  if(noExactMatch) matches = people;
+
+  switchTab('search');
+  var note = noExactMatch
+    ? 'Tikslaus atitikmens neradome, bet štai visas šiuo metu prieinamas tinklas:'
+    : 'Pagal jūsų klausimą tinkamiausi būtų šie žmonės:';
+  el.innerHTML = '<p class="search-results-note">'+note+'</p>' +
+    matches.map(function(p){
+      return '<div class="match-card">' +
+        '<div class="name">'+escapeHtml(p.name)+'</div>' +
+        '<div class="tag">'+escapeHtml(p.tag)+'</div>' +
+        '<button class="cta" onclick="startChatWith(\''+p.id+'\')">Pradėti pokalbį</button>' +
+      '</div>';
+    }).join('');
+}
+
+/* ---------- chat ---------- */
+async function loadChat(){
+  try{
+    var res = await store.get(CHAT_KEY);
+    chatState.conversations = JSON.parse(res.value);
+  }catch(e){
+    chatState.conversations = JSON.parse(JSON.stringify(seedChat));
+    try{ await store.set(CHAT_KEY, JSON.stringify(chatState.conversations)); }catch(e2){}
+  }
+  renderChat();
+}
+async function saveChat(){
+  try{ await store.set(CHAT_KEY, JSON.stringify(chatState.conversations)); }
+  catch(e){ console.error('Nepavyko išsaugoti pokalbio', e); }
+}
+function getActiveConv(){ return chatState.conversations.find(function(c){ return c.id === chatState.activeId; }); }
+
+function renderChat(){
+  var tab = document.getElementById('tab-chat');
+  var sidebarHtml = '<div class="chat-sidebar">' + chatState.conversations.map(function(c){
+    var last = c.messages[c.messages.length-1];
+    var activeClass = c.id === chatState.activeId ? ' active' : '';
+    return '<div class="chat-conv'+activeClass+'" onclick="selectConversation(\''+c.id+'\')">' +
+      '<div class="avatar">'+initials(c.name)+'</div>' +
+      '<div class="chat-conv-body">' +
+        '<div class="chat-conv-top"><span class="chat-conv-name">'+escapeHtml(c.name)+'</span><span class="chat-conv-time">'+ (last?escapeHtml(last.time):'') +'</span></div>' +
+        '<div class="chat-conv-tag">'+escapeHtml(c.tag)+'</div>' +
+        '<div class="chat-conv-preview">'+ (last ? (last.from==='me'?'Jūs: ':'') + escapeHtml(last.text) : 'Naujas pokalbis — parašykite pirmi.') +'</div>' +
+      '</div></div>';
+  }).join('') + '<div style="padding:16px 18px;"><button class="reset-link" onclick="resetChat()">Išvalyti pokalbių istoriją</button></div></div>';
+
+  var active = getActiveConv();
+  var threadHtml;
+  if(active){
+    threadHtml = '<div class="chat-thread">' +
+      '<div class="chat-header">' +
+        '<button class="chat-back" onclick="chatGoBack()" aria-label="Atgal">‹</button>' +
+        '<div class="avatar">'+initials(active.name)+'</div>' +
+        '<div><div class="chat-conv-name">'+escapeHtml(active.name)+'</div><div class="chat-conv-tag">'+escapeHtml(active.tag)+'</div></div>' +
+      '</div>' +
+      '<div class="chat-messages" id="chat-messages">' + (active.messages.length ? active.messages.map(function(m){
+        return '<div class="chat-msg '+(m.from==='me'?'me':'them')+'">'+escapeHtml(m.text)+'<span class="chat-msg-time">'+escapeHtml(m.time)+'</span></div>';
+      }).join('') : '<div style="color:var(--ink-muted);font-size:13.5px;">Naujas atitikmuo. Pagal dėmesio kainos principą pirmoje žinutėje verta pasiūlyti kažką konkretaus.</div>') + '</div>' +
+      '<div class="chat-composer">' +
+        '<textarea id="chat-input" placeholder="Rašykite žinutę..." onkeydown="handleChatKey(event)"></textarea>' +
+        '<button class="cta" onclick="sendChatMessage()">Siųsti</button>' +
+      '</div></div>';
+  } else {
+    threadHtml = '<div class="chat-thread"><div class="chat-empty">Pasirinkite pokalbį kairėje</div></div>';
+  }
+
+  tab.innerHTML = sidebarHtml + threadHtml;
+  var box = document.getElementById('chat-messages');
+  if(box) box.scrollTop = box.scrollHeight;
+}
+
+function selectConversation(id){
+  chatState.activeId = id;
+  document.getElementById('tab-chat').classList.add('view-thread');
+  document.getElementById('tab-chat').classList.remove('view-list');
+  renderChat();
+  var input = document.getElementById('chat-input');
+  if(input) input.focus();
+}
+function chatGoBack(){
+  document.getElementById('tab-chat').classList.add('view-list');
+  document.getElementById('tab-chat').classList.remove('view-thread');
+}
+function handleChatKey(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendChatMessage(); } }
+function sendChatMessage(){
+  var input = document.getElementById('chat-input');
+  var text = input.value.trim();
+  if(!text) return;
+  var active = getActiveConv();
+  if(!active) return;
+  var time = new Date().toLocaleTimeString('lt-LT', {hour:'2-digit', minute:'2-digit'});
+  active.messages.push({from:'me', text:text, time:time});
+  renderChat();
+  var newInput = document.getElementById('chat-input');
+  if(newInput) newInput.focus();
+  saveChat();
+}
+function resetChat(){
+  chatState.conversations = JSON.parse(JSON.stringify(seedChat));
+  chatState.activeId = null;
+  saveChat();
+  document.getElementById('tab-chat').classList.add('view-list');
+  document.getElementById('tab-chat').classList.remove('view-thread');
+  renderChat();
+}
+
+function startChatWith(personId){
+  var person = people.find(function(p){ return p.id === personId; });
+  if(!person) return;
+  var existing = chatState.conversations.find(function(c){ return c.id === personId; });
+  if(!existing){
+    existing = {id: personId, name: person.name, tag: person.tag, messages: []};
+    chatState.conversations.unshift(existing);
+    saveChat();
+  }
+  switchTab('chat');
+  selectConversation(personId);
+}
+
+/* ---------- profile ---------- */
+async function loadProfile(){
+  try{
+    var res = await store.get(PROFILE_KEY);
+    var p = JSON.parse(res.value);
+    document.getElementById('p-name').value = p.name || '';
+    document.getElementById('p-about').value = p.about || '';
+    document.getElementById('p-tags').value = p.tags || '';
+    document.getElementById('p-question').value = p.question || '';
+    profileComplete = !!p.name;
+  }catch(e){ profileComplete = false; /* nothing saved yet — leave fields empty */ }
+  updateHomeView();
+}
+async function saveProfile(){
+  var data = {
+    name: document.getElementById('p-name').value.trim(),
+    about: document.getElementById('p-about').value.trim(),
+    tags: document.getElementById('p-tags').value.trim(),
+    question: document.getElementById('p-question').value.trim()
+  };
+  try{
+    await store.set(PROFILE_KEY, JSON.stringify(data));
+    var justCompleted = !profileComplete && !!data.name;
+    profileComplete = !!data.name;
+    updateHomeView();
+    var note = document.getElementById('save-note');
+    note.classList.add('show');
+    setTimeout(function(){ note.classList.remove('show'); }, 1800);
+    if(justCompleted) setTimeout(function(){ switchTab('home'); }, 900);
+  }catch(e){ console.error('Nepavyko išsaugoti profilio', e); }
+}
+
+/* ---------- init ---------- */
+renderFeed();
+loadChat();
+loadProfile();
+</script>
+</body>
+</html>
