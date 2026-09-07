@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "reta-grandis",
+  "compatibility_date": "2026-09-07",
+  "main": "src/worker.js",
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"],
+    "not_found_handling": "404-page"
+  },
+  "kv_namespaces": [
+    { "binding": "APPLICATIONS_KV", "id": "466be206edd5480c90ad9ffa52847aa4" }
+  ]
+}
