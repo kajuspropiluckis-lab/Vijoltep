@@ -130,6 +130,19 @@
   .post-images{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px;}
   .post-images img{width:100%;max-height:280px;object-fit:cover;border-radius:2px;display:block;}
   .empty-note{color:var(--ink-muted);font-size:13.5px;padding:8px 0;}
+  .post-avatar-trigger{padding:0;cursor:pointer;}
+  .post-avatar-trigger:hover{border-color:var(--accent);}
+
+  /* --- profile modal --- */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.show{display:flex;}
+  .modal-card{position:relative;max-width:340px;width:100%;background:var(--bg-raised);border:1px solid var(--line);border-radius:2px;padding:32px 28px 28px;text-align:center;}
+  .modal-close{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--ink-muted);font-size:20px;cursor:pointer;line-height:1;padding:6px;}
+  .modal-close:hover{color:var(--ink);}
+  .modal-avatar{width:56px;height:56px;font-size:20px;margin:0 auto 14px;}
+  .modal-name{font-size:17px;margin-bottom:4px;}
+  .modal-tag{font-size:12.5px;color:var(--ink-muted);margin-bottom:14px;}
+  .modal-reason{font-size:13.5px;color:var(--ink-muted);margin:0;}
 
   .tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;}
   .tile{
@@ -406,6 +419,16 @@
         <button class="reset-link" onclick="logoutMember()">Atsijungti</button>
       </section>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="profile-modal" onclick="if(event.target===this) closeProfileModal()">
+  <div class="modal-card">
+    <button type="button" class="modal-close" onclick="closeProfileModal()" aria-label="Uždaryti">×</button>
+    <div class="avatar modal-avatar" id="profile-modal-avatar"></div>
+    <div class="modal-name" id="profile-modal-name"></div>
+    <div class="modal-tag" id="profile-modal-tag"></div>
+    <p class="modal-reason" id="profile-modal-reason"></p>
   </div>
 </div>
 
@@ -949,7 +972,7 @@ async function loadFeed(){
         : '';
       return '<div class="post-card">' +
         '<div class="post-head">' +
-          '<div class="avatar">'+escapeHtml(initials(p.authorName))+'</div>' +
+          '<button type="button" class="avatar post-avatar-trigger" data-name="'+escapeHtml(p.authorName)+'">'+escapeHtml(initials(p.authorName))+'</button>' +
           '<div><div class="post-author">'+escapeHtml(p.authorName)+'</div><div class="post-time">'+escapeHtml(fmtPostDate(p.createdAt))+'</div></div>' +
           deleteBtn +
         '</div>' +
@@ -967,6 +990,29 @@ async function deletePost(id){
   catch(e){}
   loadFeed();
 }
+
+/* ---------- posto autoriaus profilio langas ---------- */
+var PEOPLE_BY_NAME = {};
+people.forEach(function(p){ PEOPLE_BY_NAME[p.name] = p; });
+
+function openProfileModal(name){
+  var match = PEOPLE_BY_NAME[name];
+  document.getElementById('profile-modal-avatar').textContent = initials(name);
+  document.getElementById('profile-modal-name').textContent = name;
+  document.getElementById('profile-modal-tag').textContent = match ? match.tag : 'Bendruomenės narys';
+  document.getElementById('profile-modal-reason').textContent = match ? match.reason : 'Šis narys dar nepapildė viešo profilio aprašymo.';
+  document.getElementById('profile-modal').classList.add('show');
+}
+function closeProfileModal(){
+  document.getElementById('profile-modal').classList.remove('show');
+}
+document.getElementById('feed-list').addEventListener('click', function(e){
+  var trigger = e.target.closest('.post-avatar-trigger');
+  if(trigger) openProfileModal(trigger.getAttribute('data-name'));
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeProfileModal();
+});
 
 /* ---------- init ---------- */
 renderFeed();
