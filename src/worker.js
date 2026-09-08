@@ -145,6 +145,66 @@ async function handleAdminStatus(request, env) {
   return json({ ok: true, application: record });
 }
 
+async function handlePostsList(request, env) {
+  const list = await env.APPLICATIONS_KV.list({ prefix: 'post:' });
+  const items = await Promise.all(
+    list.keys.map(async (k) => {
+      const value = await env.APPLICATIONS_KV.get(k.name);
+      return value ? JSON.parse(value) : null;
+    })
+  );
+  const posts = items.filter(Boolean).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)).slice(0, 60);
+  return json({ posts });
+}
+
+async function handlePostsCreate(request, env) {
+  let data;
+  try {
+    data = await request.json();
+  } catch (e) {
+    return json({ error: 'Blogas užklausos formatas.' }, 400);
+  }
+
+  const authorName = (data.authorName || '').trim().slice(0, 60);
+  const text = (data.text || '').trim().slice(0, 2000);
+  const ownerId = (data.ownerId || '').trim().slice(0, 80);
+  let images = Array.isArray(data.images) ? data.images.slice(0, 4) : [];
+  images = images.filter((img) => typeof img === 'string' && img.startsWith('data:image/') && img.length < 700000);
+
+  if (!authorName || !ownerId || (!text && images.length === 0)) {
+    return json({ error: 'Trūksta vardo arba turinio.' }, 400);
+  }
+
+  const id = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+  const record = { id, authorName, text, images, ownerId, createdAt: new Date().toISOString() };
+
+  try {
+    await env.APPLICATIONS_KV.put('post:' + id, JSON.stringify(record));
+  } catch (e) {
+    return json({ error: 'Nepavyko paskelbti. Bandykite dar kartą.' }, 500);
+  }
+
+  return json({ ok: true, post: record });
+}
+
+async function handlePostsDelete(request, env) {
+  let data;
+  try { data = await request.json(); } catch (e) { data = {}; }
+  const id = data.id;
+  const ownerId = (data.ownerId || '').trim();
+  if (!id || !ownerId) return json({ error: 'Trūksta parametrų.' }, 400);
+
+  const key = 'post:' + id;
+  const value = await env.APPLICATIONS_KV.get(key);
+  if (!value) return json({ ok: true });
+
+  const record = JSON.parse(value);
+  if (record.ownerId !== ownerId) return json({ error: 'Neturite teisės šalinti šio įrašo.' }, 403);
+
+  await env.APPLICATIONS_KV.delete(key);
+  return json({ ok: true });
+}
+
 async function handleAdminDelete(request, env) {
   if (!(await requireAdmin(request, env))) return json({ error: 'Neprisijungta.' }, 401);
 
@@ -170,6 +230,9 @@ export default {
     if (pathname === '/api/admin/list' && method === 'GET') return handleAdminList(request, env);
     if (pathname === '/api/admin/status' && method === 'POST') return handleAdminStatus(request, env);
     if (pathname === '/api/admin/delete' && method === 'POST') return handleAdminDelete(request, env);
+    if (pathname === '/api/posts' && method === 'GET') return handlePostsList(request, env);
+    if (pathname === '/api/posts' && method === 'POST') return handlePostsCreate(request, env);
+    if (pathname === '/api/posts/delete' && method === 'POST') return handlePostsDelete(request, env);
 
     return json({ error: 'Not found' }, 404);
   }

@@ -98,6 +98,39 @@
   .onboarding{max-width:420px;padding:28px;border:1px solid var(--line);border-radius:2px;background:var(--bg-raised);}
   .onboarding h2{font-size:20px;margin-bottom:8px;}
 
+  /* --- feed: composer + posts --- */
+  .feed-composer{max-width:560px;border:1px solid var(--line);border-radius:2px;background:var(--bg-raised);padding:16px;margin-bottom:24px;}
+  .composer-top{display:flex;gap:12px;}
+  .composer-top textarea{
+    flex:1;resize:vertical;min-height:44px;background:var(--bg);border:1px solid var(--line);border-radius:8px;
+    color:var(--ink);padding:11px 13px;font-size:14px;font-family:var(--sans);
+  }
+  .composer-top textarea:focus{outline:none;border-color:var(--ink-muted);}
+  .composer-previews{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .preview-thumb{position:relative;width:64px;height:64px;border-radius:2px;overflow:hidden;border:1px solid var(--line);}
+  .preview-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .preview-thumb button{
+    position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;
+    background:rgba(0,0,0,.6);color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer;padding:0;
+  }
+  .composer-actions{display:flex;justify-content:space-between;align-items:center;margin-top:12px;}
+  .composer-upload{
+    font-size:13px;color:var(--ink-muted);cursor:pointer;padding:6px 0;user-select:none;
+  }
+  .composer-upload:hover{color:var(--ink);}
+
+  .feed-list{max-width:560px;}
+  .post-card{border:1px solid var(--line);border-radius:2px;background:var(--bg-raised);padding:16px;margin-bottom:14px;}
+  .post-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .post-author{font-size:14px;font-weight:500;}
+  .post-time{font-size:11.5px;color:var(--ink-muted);}
+  .post-head .post-del{margin-left:auto;background:none;border:none;color:var(--ink-muted);font-size:12px;cursor:pointer;text-decoration:underline;padding:0;}
+  .post-head .post-del:hover{color:var(--ink);}
+  .post-text{font-size:14px;line-height:1.5;margin:0 0 10px;white-space:pre-wrap;}
+  .post-images{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px;}
+  .post-images img{width:100%;max-height:280px;object-fit:cover;border-radius:2px;display:block;}
+  .empty-note{color:var(--ink-muted);font-size:13.5px;padding:8px 0;}
+
   .tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;}
   .tile{
     aspect-ratio:1;border:1px solid var(--line);border-radius:2px;background:var(--bg-raised);
@@ -260,6 +293,22 @@
         <div class="home-wrap">
           <div class="home-watermark">Reta grandis</div>
           <div class="home-content">
+            <div class="feed-composer">
+              <div class="composer-top">
+                <div class="avatar" id="composer-avatar">👤</div>
+                <textarea id="post-text" rows="2" placeholder="Ką turite pasakyti tinklui? Pvz.: Noriu investuoti į saulės energetiką — gal kas žinote gerų projektų?"></textarea>
+              </div>
+              <div class="composer-previews" id="composer-previews"></div>
+              <div class="composer-actions">
+                <label class="composer-upload">
+                  🖼️ Nuotrauka
+                  <input type="file" id="post-images" accept="image/*" multiple hidden>
+                </label>
+                <button class="cta" type="button" onclick="submitPost()" id="post-submit-btn">Paskelbti</button>
+              </div>
+            </div>
+            <div class="feed-list" id="feed-list"></div>
+
             <div class="onboarding" id="onboarding">
               <h2>Pirmiausia — užpildykite profilį</h2>
               <p class="tab-note">Kad algoritmas galėtų parinkti tinkamus žmones, trumpai papasakokite apie save ir savo klausimą tinklui.</p>
@@ -763,11 +812,146 @@ function checkCookieConsent(){
   }catch(e){}
 }
 
+/* ---------- feed: shared posts visible to all members ---------- */
+var OWNER_KEY = 'reta-grandis-owner-v1';
+function getOwnerId(){
+  try{
+    var id = localStorage.getItem(OWNER_KEY);
+    if(!id){
+      id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('o-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+      localStorage.setItem(OWNER_KEY, id);
+    }
+    return id;
+  }catch(e){ return 'anon'; }
+}
+
+var pendingImages = [];
+
+function resizeImageFile(file){
+  return new Promise(function(resolve, reject){
+    var reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = function(e){
+      var img = new Image();
+      img.onerror = reject;
+      img.onload = function(){
+        var maxW = 900;
+        var scale = Math.min(1, maxW / img.width);
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPreviews(){
+  var el = document.getElementById('composer-previews');
+  el.innerHTML = pendingImages.map(function(src, i){
+    return '<div class="preview-thumb"><img src="'+src+'"><button type="button" onclick="removePendingImage('+i+')" aria-label="Šalinti">×</button></div>';
+  }).join('');
+}
+function removePendingImage(i){ pendingImages.splice(i, 1); renderPreviews(); }
+
+document.getElementById('post-images').addEventListener('change', async function(e){
+  var slotsLeft = 4 - pendingImages.length;
+  var files = Array.prototype.slice.call(e.target.files, 0, Math.max(0, slotsLeft));
+  for(var i = 0; i < files.length; i++){
+    try{
+      var dataUrl = await resizeImageFile(files[i]);
+      pendingImages.push(dataUrl);
+    }catch(err){ /* praleidžiam nepavykusią nuotrauką */ }
+  }
+  renderPreviews();
+  e.target.value = '';
+});
+
+function fmtPostDate(iso){
+  try{ return new Date(iso).toLocaleString('lt-LT'); }catch(e){ return iso; }
+}
+
+async function submitPost(){
+  var textEl = document.getElementById('post-text');
+  var text = textEl.value.trim();
+  if(!text && pendingImages.length === 0) return;
+
+  var authorName = 'Narys';
+  try{
+    var acc = JSON.parse(localStorage.getItem(ACCOUNT_KEY));
+    if(acc && acc.name) authorName = acc.name;
+  }catch(e){}
+
+  var btn = document.getElementById('post-submit-btn');
+  btn.disabled = true;
+  try{
+    var res = await fetch('/api/posts', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ authorName: authorName, text: text, images: pendingImages, ownerId: getOwnerId() })
+    });
+    if(!res.ok) throw new Error('failed');
+    textEl.value = '';
+    pendingImages = [];
+    renderPreviews();
+    loadFeed();
+  }catch(e){
+    alert('Nepavyko paskelbti. Patikrinkite interneto ryšį ir bandykite dar kartą.');
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+async function loadFeed(){
+  var el = document.getElementById('feed-list');
+  try{
+    var res = await fetch('/api/posts');
+    if(!res.ok) throw new Error('failed');
+    var data = await res.json();
+    var posts = data.posts || [];
+    var myOwnerId = getOwnerId();
+    if(posts.length === 0){
+      el.innerHTML = '<p class="empty-note">Kol kas nė vieno įrašo. Būkite pirmi!</p>';
+      return;
+    }
+    el.innerHTML = posts.map(function(p){
+      var imagesHtml = (p.images && p.images.length)
+        ? '<div class="post-images">' + p.images.map(function(src){ return '<img src="'+src+'">'; }).join('') + '</div>'
+        : '';
+      var deleteBtn = p.ownerId === myOwnerId
+        ? '<button class="post-del" onclick="deletePost(\''+p.id+'\')">Šalinti</button>'
+        : '';
+      return '<div class="post-card">' +
+        '<div class="post-head">' +
+          '<div class="avatar">'+escapeHtml(initials(p.authorName))+'</div>' +
+          '<div><div class="post-author">'+escapeHtml(p.authorName)+'</div><div class="post-time">'+escapeHtml(fmtPostDate(p.createdAt))+'</div></div>' +
+          deleteBtn +
+        '</div>' +
+        (p.text ? '<p class="post-text">'+escapeHtml(p.text)+'</p>' : '') +
+        imagesHtml +
+      '</div>';
+    }).join('');
+  }catch(e){
+    el.innerHTML = '<p class="empty-note">Nepavyko įkelti įrašų. Patikrinkite interneto ryšį.</p>';
+  }
+}
+
+async function deletePost(id){
+  try{ await fetch('/api/posts/delete', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:id, ownerId:getOwnerId()})}); }
+  catch(e){}
+  loadFeed();
+}
+
 /* ---------- init ---------- */
 renderFeed();
 loadChat();
 loadProfile();
 loadAccount();
+loadFeed();
 renderMembershipStatus();
 checkAdminBypass();
 checkCookieConsent();
