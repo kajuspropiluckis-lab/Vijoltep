@@ -636,6 +636,9 @@ function startChatWith(personId){
 }
 
 /* ---------- profile ---------- */
+function isBetaUser(){
+  try{ return localStorage.getItem('reta-grandis-beta-v1') === '1'; }catch(e){ return false; }
+}
 async function loadProfile(){
   try{
     var res = await store.get(PROFILE_KEY);
@@ -644,8 +647,8 @@ async function loadProfile(){
     document.getElementById('p-about').value = p.about || '';
     document.getElementById('p-tags').value = p.tags || '';
     document.getElementById('p-question').value = p.question || '';
-    profileComplete = !!p.name;
-  }catch(e){ profileComplete = false; /* nothing saved yet — leave fields empty */ }
+    profileComplete = !!p.name || isBetaUser();
+  }catch(e){ profileComplete = isBetaUser(); /* beta testeriams iškart rodome atitikmenis */ }
   updateHomeView();
 }
 async function saveProfile(){

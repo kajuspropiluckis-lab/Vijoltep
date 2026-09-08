@@ -510,6 +510,7 @@
     var err = document.getElementById('beta-error');
     var code = input.value.trim().toUpperCase();
     if(BETA_CODES.indexOf(code) !== -1){
+      try{ localStorage.setItem('reta-grandis-beta-v1', '1'); }catch(e){}
       window.location.href = 'portalas.html';
     }else{
       err.textContent = 'Neteisingas kodas.';
