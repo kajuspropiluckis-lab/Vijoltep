@@ -29,6 +29,16 @@
 
   html:not(.authed) .app{display:none;}
   html.authed .auth-gate{display:none;}
+
+  .cookie-banner{
+    display:none;position:fixed;left:0;right:0;bottom:0;z-index:200;
+    background:var(--bg-raised);border-top:1px solid var(--line);
+    padding:16px 20px;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center;
+  }
+  .cookie-banner.show{display:flex;}
+  .cookie-banner p{margin:0;font-size:13px;color:var(--ink-muted);max-width:520px;}
+  .cookie-banner a{color:var(--ink);text-decoration:underline;}
+  .cookie-banner .cta{flex-shrink:0;padding:9px 20px;font-size:13px;width:auto;}
   .auth-gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;}
   .auth-card{max-width:380px;width:100%;}
   .auth-mark{font-family:var(--serif);font-size:15px;letter-spacing:.05em;color:var(--ink-muted);text-align:center;margin-bottom:18px;}
@@ -132,6 +142,12 @@
   .cancel-confirm{margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:2px;background:var(--bg-raised);}
   .cancel-confirm p{font-size:13.5px;color:var(--ink-muted);margin:0 0 14px;}
 
+  .settings-h3{font-size:16px;margin:36px 0 14px;padding-top:24px;border-top:1px solid var(--line);}
+  #tab-settings h3.settings-h3:first-of-type{margin-top:0;padding-top:0;border-top:none;}
+  .settings-links{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 16px;}
+  .settings-links a{font-size:13.5px;color:var(--ink-muted);text-decoration:underline;}
+  .settings-links a:hover{color:var(--ink);}
+
   /* --- chat (nested inside Pokalbiai tab) --- */
   #tab-chat{padding:0;max-width:none;height:100%;display:none;}
   #tab-chat.active{display:flex;}
@@ -194,6 +210,11 @@
   if(localStorage.getItem('reta-grandis-account-v1')) document.documentElement.classList.add('authed');
 </script>
 
+<div class="cookie-banner" id="cookie-banner">
+  <p>Ši svetainė naudoja naršyklės atmintį (localStorage), kad išsaugotų jūsų profilį, pokalbius ir nustatymus. Daugiau — <a href="privatumo-politika.html" target="_blank">privatumo politikoje</a>.</p>
+  <button type="button" class="cta" onclick="acceptCookies()">Supratau</button>
+</div>
+
 <div class="auth-gate" id="auth-gate">
   <div class="auth-card">
     <div class="auth-mark">Reta grandis</div>
@@ -223,6 +244,7 @@
     <a class="brand" href="index.html">Reta grandis</a>
     <input class="topsearch" id="search-input" type="text" placeholder="Ko ieškote? Pvz.: kas išmano baterijų perdirbimą" onkeydown="if(event.key==='Enter')runSearch()">
     <button class="profile-icon" data-tab="profile" onclick="switchTab('profile')" aria-label="Profilis">👤</button>
+    <button class="profile-icon" data-tab="settings" onclick="switchTab('settings')" aria-label="Nustatymai">⚙️</button>
   </div>
   <div class="body">
     <nav class="sidenav">
@@ -295,6 +317,41 @@
           </div>
           <p class="tab-note" style="margin-top:14px;margin-bottom:0;"><a href="grazinimo-politika.html" target="_blank" style="color:inherit;">Grąžinimo politika ↗</a></p>
         </div>
+      </section>
+
+      <section id="tab-settings" class="tab">
+        <h2>Nustatymai</h2>
+        <p class="tab-note">Paskyros duomenys, privatumas ir prieiga.</p>
+
+        <h3 class="settings-h3">Paskyra</h3>
+        <div class="field">
+          <label for="s-name">Vardas</label>
+          <input id="s-name" type="text" placeholder="Jūsų vardas">
+        </div>
+        <div class="field">
+          <label for="s-email">El. paštas</label>
+          <input id="s-email" type="email" placeholder="jusu@pastas.lt">
+        </div>
+        <button class="cta" onclick="saveAccount()">Išsaugoti</button>
+        <span class="save-note" id="account-save-note">Išsaugota</span>
+
+        <h3 class="settings-h3">Privatumas ir duomenys</h3>
+        <p class="tab-note">Portalo duomenys (profilis, pokalbiai, paskyra) saugomi tik jūsų naršyklėje.</p>
+        <p class="settings-links">
+          <a href="privatumo-politika.html" target="_blank">Privatumo politika ↗</a>
+          <a href="grazinimo-politika.html" target="_blank">Grąžinimo politika ↗</a>
+        </p>
+        <button class="reset-link" onclick="showClearDataConfirm()">Išvalyti visus mano duomenis</button>
+        <div class="cancel-confirm" id="clear-data-confirm" hidden>
+          <p>Bus ištrintas jūsų profilis, pokalbiai, paskyra ir narystės būsena šioje naršyklėje. Šio veiksmo atšaukti negalėsite.</p>
+          <div style="display:flex;gap:10px;">
+            <button class="cta quiet" type="button" onclick="hideClearDataConfirm()">Ne, palikti</button>
+            <button class="cta" type="button" onclick="clearAllData()">Taip, ištrinti viską</button>
+          </div>
+        </div>
+
+        <h3 class="settings-h3">Paskyros valdymas</h3>
+        <button class="reset-link" onclick="logoutMember()">Atsijungti</button>
       </section>
     </div>
   </div>
@@ -646,12 +703,68 @@ async function checkAdminBypass(){
   }catch(e){ /* not admin or offline — lieka registracijos langas */ }
 }
 
+/* ---------- nustatymai: paskyra ---------- */
+function loadAccount(){
+  try{
+    var raw = localStorage.getItem(ACCOUNT_KEY);
+    if(!raw) return;
+    var acc = JSON.parse(raw);
+    document.getElementById('s-name').value = acc.name || '';
+    document.getElementById('s-email').value = acc.email || '';
+  }catch(e){}
+}
+function saveAccount(){
+  var data = {
+    name: document.getElementById('s-name').value.trim(),
+    email: document.getElementById('s-email').value.trim()
+  };
+  try{ localStorage.setItem(ACCOUNT_KEY, JSON.stringify(data)); }catch(e){}
+  var pName = document.getElementById('p-name');
+  if(pName) pName.value = data.name;
+  var note = document.getElementById('account-save-note');
+  note.classList.add('show');
+  setTimeout(function(){ note.classList.remove('show'); }, 1800);
+}
+
+/* ---------- nustatymai: privatumas ir duomenys ---------- */
+function showClearDataConfirm(){ document.getElementById('clear-data-confirm').hidden = false; }
+function hideClearDataConfirm(){ document.getElementById('clear-data-confirm').hidden = true; }
+function clearAllData(){
+  [ACCOUNT_KEY, PROFILE_KEY, CHAT_KEY, MEMBERSHIP_KEY].forEach(function(key){
+    try{ localStorage.removeItem(key); }catch(e){}
+  });
+  location.reload();
+}
+
+/* ---------- nustatymai: atsijungimas ---------- */
+function logoutMember(){
+  try{ localStorage.removeItem(ACCOUNT_KEY); }catch(e){}
+  document.documentElement.classList.remove('authed');
+  location.reload();
+}
+
+/* ---------- slapukai (localStorage) sutikimas ---------- */
+var COOKIE_CONSENT_KEY = 'reta-grandis-cookie-consent-v1';
+function acceptCookies(){
+  try{ localStorage.setItem(COOKIE_CONSENT_KEY, '1'); }catch(e){}
+  document.getElementById('cookie-banner').classList.remove('show');
+}
+function checkCookieConsent(){
+  try{
+    if(!localStorage.getItem(COOKIE_CONSENT_KEY)){
+      document.getElementById('cookie-banner').classList.add('show');
+    }
+  }catch(e){}
+}
+
 /* ---------- init ---------- */
 renderFeed();
 loadChat();
 loadProfile();
+loadAccount();
 renderMembershipStatus();
 checkAdminBypass();
+checkCookieConsent();
 </script>
 </body>
 </html>

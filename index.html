@@ -185,6 +185,16 @@
   .form-error.show{display:block;}
   .cta:disabled{opacity:.5;cursor:default;}
 
+  .cookie-banner{
+    display:none;position:fixed;left:0;right:0;bottom:0;z-index:200;
+    background:var(--bg-raised);border-top:1px solid var(--line);
+    padding:16px 20px;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center;
+  }
+  .cookie-banner.show{display:flex;}
+  .cookie-banner p{margin:0;font-size:13px;color:var(--ink-muted);max-width:520px;}
+  .cookie-banner a{color:var(--ink);text-decoration:underline;}
+  .cookie-banner .cta{flex-shrink:0;padding:9px 20px;font-size:13px;width:auto;}
+
   @media (max-width:560px){
     .topbar{padding:12px 16px;}
     .menu-panel{right:16px;}
@@ -195,10 +205,16 @@
     .tl-dot{width:24px;height:24px;font-size:12px;}
     .tl-label{font-size:10.5px;line-height:1.25;max-width:58px;}
     .membership{padding:24px;}
+    .cookie-banner{padding:14px 16px;text-align:center;justify-content:center;}
   }
 </style>
 </head>
 <body>
+
+<div class="cookie-banner" id="cookie-banner">
+  <p>Ši svetainė naudoja naršyklės atmintį (localStorage), kad išsaugotų jūsų portalo profilį, pokalbius ir nustatymus. Daugiau — <a href="privatumo-politika.html">privatumo politikoje</a>.</p>
+  <button type="button" class="cta" onclick="acceptCookies()">Supratau</button>
+</div>
 
 <div class="app">
   <div class="topbar">
@@ -462,6 +478,19 @@
       btn.disabled = false;
     }
   }
+
+  var COOKIE_CONSENT_KEY = 'reta-grandis-cookie-consent-v1';
+  function acceptCookies(){
+    try{ localStorage.setItem(COOKIE_CONSENT_KEY, '1'); }catch(e){}
+    document.getElementById('cookie-banner').classList.remove('show');
+  }
+  (function(){
+    try{
+      if(!localStorage.getItem(COOKIE_CONSENT_KEY)){
+        document.getElementById('cookie-banner').classList.add('show');
+      }
+    }catch(e){}
+  })();
 </script>
 
 </body>
