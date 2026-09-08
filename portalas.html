@@ -254,7 +254,12 @@
 </head>
 <body>
 <script>
-  if(localStorage.getItem('reta-grandis-account-v1')) document.documentElement.classList.add('authed');
+  var hasAccount = !!localStorage.getItem('reta-grandis-account-v1');
+  var isBetaEntry = localStorage.getItem('reta-grandis-beta-v1') === '1';
+  if(hasAccount || isBetaEntry) document.documentElement.classList.add('authed');
+  if(isBetaEntry && !hasAccount){
+    try{ localStorage.setItem('reta-grandis-account-v1', JSON.stringify({name:'Beta testuotojas', email:''})); }catch(e){}
+  }
 </script>
 
 <div class="cookie-banner" id="cookie-banner">
