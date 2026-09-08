@@ -103,6 +103,11 @@ async function handleAdminLogout() {
   return new Response(JSON.stringify({ ok: true }), { status: 200, headers });
 }
 
+async function handleAdminCheck(request, env) {
+  const isAdmin = await requireAdmin(request, env);
+  return json({ isAdmin });
+}
+
 async function handleAdminList(request, env) {
   if (!(await requireAdmin(request, env))) return json({ error: 'Neprisijungta.' }, 401);
 
@@ -161,6 +166,7 @@ export default {
     if (pathname === '/api/apply' && method === 'POST') return handleApply(request, env);
     if (pathname === '/api/admin/login' && method === 'POST') return handleAdminLogin(request, env);
     if (pathname === '/api/admin/logout' && method === 'POST') return handleAdminLogout();
+    if (pathname === '/api/admin/check' && method === 'GET') return handleAdminCheck(request, env);
     if (pathname === '/api/admin/list' && method === 'GET') return handleAdminList(request, env);
     if (pathname === '/api/admin/status' && method === 'POST') return handleAdminStatus(request, env);
     if (pathname === '/api/admin/delete' && method === 'POST') return handleAdminDelete(request, env);

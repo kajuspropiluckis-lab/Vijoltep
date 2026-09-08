@@ -636,11 +636,22 @@ function reactivateMembership(){
   renderMembershipStatus();
 }
 
+/* ---------- admin bypass: skip registration if already logged in as admin ---------- */
+async function checkAdminBypass(){
+  if(document.documentElement.classList.contains('authed')) return;
+  try{
+    var res = await fetch('/api/admin/check');
+    var data = await res.json();
+    if(data.isAdmin) document.documentElement.classList.add('authed');
+  }catch(e){ /* not admin or offline — lieka registracijos langas */ }
+}
+
 /* ---------- init ---------- */
 renderFeed();
 loadChat();
 loadProfile();
 renderMembershipStatus();
+checkAdminBypass();
 </script>
 </body>
 </html>
