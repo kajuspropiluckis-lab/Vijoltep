@@ -906,13 +906,35 @@ async function submitPost(){
   }
 }
 
+function getFakeBetaPosts(){
+  var now = Date.now();
+  var hour = 60 * 60 * 1000;
+  return [
+    {id:'fake-1', authorName:'Tomas B.', text:'Investuoju į baterijų perdirbimo startuolius. Jei kas dirbate šioje srityje arba pažįstate gerų komandų — parašykite.', images:[], createdAt:new Date(now - 3*hour).toISOString()},
+    {id:'fake-2', authorName:'Justina P.', text:'Pardaviau verslą prieš pusmetį ir dabar galvoju, į ką investuoti angel raundus. Ieškau bendraminčių pasidalinti apžvalgomis.', images:[], createdAt:new Date(now - 9*hour).toISOString()},
+    {id:'fake-3', authorName:'Rokas L.', text:'Perimu šeimos verslą iš tėvų — ar kas nors čia jau perėjo panašų procesą? Norėčiau pasitarti apie valdymo perdavimą.', images:[], createdAt:new Date(now - 27*hour).toISOString()},
+    {id:'fake-4', authorName:'Vaidas K.', text:'Neseniai palikau valdybos narystę — svarstau patarėjo vaidmenis. Jei reikia patirties valdymo ar strategijos srityje, rašykite.', images:[], createdAt:new Date(now - 52*hour).toISOString()}
+  ];
+}
+
 async function loadFeed(){
   var el = document.getElementById('feed-list');
+  var posts = [];
   try{
     var res = await fetch('/api/posts');
     if(!res.ok) throw new Error('failed');
     var data = await res.json();
-    var posts = data.posts || [];
+    posts = data.posts || [];
+  }catch(e){
+    if(!isBetaUser()){
+      el.innerHTML = '<p class="empty-note">Nepavyko įkelti įrašų. Patikrinkite interneto ryšį.</p>';
+      return;
+    }
+  }
+  try{
+    if(isBetaUser()){
+      posts = posts.concat(getFakeBetaPosts()).sort(function(a,b){ return a.createdAt < b.createdAt ? 1 : -1; });
+    }
     var myOwnerId = getOwnerId();
     if(posts.length === 0){
       el.innerHTML = '<p class="empty-note">Kol kas nė vieno įrašo. Būkite pirmi!</p>';
