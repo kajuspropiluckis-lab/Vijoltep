@@ -99,7 +99,8 @@
   .onboarding h2{font-size:20px;margin-bottom:8px;}
 
   /* --- feed: composer + posts --- */
-  .feed-composer{max-width:560px;border:1px solid var(--line);border-radius:2px;background:var(--bg-raised);padding:16px;margin-bottom:24px;}
+  #tab-home{max-width:none;}
+  .feed-composer{max-width:560px;margin:0 auto 24px;border:1px solid var(--line);border-radius:3px;background:var(--bg-raised);padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.18);}
   .composer-top{display:flex;gap:12px;}
   .composer-top textarea{
     flex:1;resize:vertical;min-height:44px;background:var(--bg);border:1px solid var(--line);border-radius:8px;
@@ -119,8 +120,9 @@
   }
   .composer-upload:hover{color:var(--ink);}
 
-  .feed-list{max-width:560px;}
-  .post-card{border:1px solid var(--line);border-radius:2px;background:var(--bg-raised);padding:16px;margin-bottom:14px;}
+  .feed-list{max-width:560px;margin:0 auto;}
+  .post-card{border:1px solid var(--line);border-radius:3px;background:var(--bg-raised);padding:18px;margin-bottom:16px;box-shadow:0 8px 24px rgba(0,0,0,.18);transition:border-color .15s ease;}
+  .post-card:hover{border-color:var(--ink-muted);}
   .post-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
   .post-author{font-size:14px;font-weight:500;}
   .post-time{font-size:11.5px;color:var(--ink-muted);}
@@ -129,6 +131,22 @@
   .post-text{font-size:14px;line-height:1.5;margin:0 0 10px;white-space:pre-wrap;}
   .post-images{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px;}
   .post-images img{width:100%;max-height:280px;object-fit:cover;border-radius:2px;display:block;}
+
+  .post-comments{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
+  .comment{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;}
+  .comment-avatar{width:26px;height:26px;font-size:11px;flex-shrink:0;}
+  .comment-body{background:var(--bg);border-radius:12px;padding:7px 12px;font-size:13px;line-height:1.4;}
+  .comment-author{font-weight:500;color:var(--ink);}
+  .comment-text{color:var(--ink-muted);}
+  .comment-composer{display:flex;gap:8px;margin-top:12px;}
+  .comment-input{
+    flex:1;background:var(--bg);border:1px solid var(--line);border-radius:14px;
+    padding:8px 14px;color:var(--ink);font-size:13px;font-family:var(--sans);min-width:0;
+  }
+  .comment-input:focus{outline:none;border-color:var(--ink-muted);}
+  .comment-input:disabled{opacity:.5;}
+  .comment-send{background:none;border:none;color:var(--accent-ink);font-size:13px;font-weight:500;cursor:pointer;padding:0 4px;flex-shrink:0;}
+  .comment-send:hover{text-decoration:underline;}
   .empty-note{color:var(--ink-muted);font-size:13.5px;padding:8px 0;}
   .post-avatar-trigger{padding:0;cursor:pointer;}
   .post-avatar-trigger:hover{border-color:var(--accent);}
@@ -303,6 +321,7 @@
   <div class="body">
     <nav class="sidenav">
       <button class="nav-item active" data-tab="home" onclick="switchTab('home')">Pradžia</button>
+      <button class="nav-item" data-tab="suggested" onclick="switchTab('suggested')">✨ Jums siūloma</button>
       <button class="nav-item" data-tab="chat" onclick="switchTab('chat')">💬 Pokalbiai</button>
     </nav>
 
@@ -326,19 +345,21 @@
               </div>
             </div>
             <div class="feed-list" id="feed-list"></div>
-
-            <div class="onboarding" id="onboarding">
-              <h2>Pirmiausia — užpildykite profilį</h2>
-              <p class="tab-note">Kad algoritmas galėtų parinkti tinkamus žmones, trumpai papasakokite apie save ir savo klausimą tinklui.</p>
-              <button class="cta" onclick="switchTab('profile')">Užpildyti profilį</button>
-            </div>
-            <div class="home-feed hidden" id="home-feed">
-              <h2>Jums siūloma</h2>
-              <p class="tab-note">Pasirinkite sritį, kad pamatytumėte joje siūlomus žmones.</p>
-              <div class="tile-grid" id="tile-grid"></div>
-              <div class="tile-detail" id="tile-detail"><div class="tile-detail-inner" id="tile-detail-inner"></div></div>
-            </div>
           </div>
+        </div>
+      </section>
+
+      <section id="tab-suggested" class="tab">
+        <div class="onboarding" id="onboarding">
+          <h2>Pirmiausia — užpildykite profilį</h2>
+          <p class="tab-note">Kad algoritmas galėtų parinkti tinkamus žmones, trumpai papasakokite apie save ir savo klausimą tinklui.</p>
+          <button class="cta" onclick="switchTab('profile')">Užpildyti profilį</button>
+        </div>
+        <div class="home-feed hidden" id="home-feed">
+          <h2>Jums siūloma</h2>
+          <p class="tab-note">Pasirinkite sritį, kad pamatytumėte joje algoritmo parinktus žmones.</p>
+          <div class="tile-grid" id="tile-grid"></div>
+          <div class="tile-detail" id="tile-detail"><div class="tile-detail-inner" id="tile-detail-inner"></div></div>
         </div>
       </section>
 
@@ -473,13 +494,13 @@ function registerAccount(e){
 }
 
 var people = [
-  {id:'m1', name:'Tomas B.', tag:'investuotojai į climate tech', reason:'Siūlomas, nes neseniai investavote į panašią sritį.', keywords:['klimat','baterij','tech']},
-  {id:'m2', name:'Justina P.', tag:'founderiai po exit’o', reason:'Siūloma, nes abu ieškote naujo tikslo po verslo pardavimo.', keywords:['exit','pardav','tiksl']},
-  {id:'m3', name:'Rokas L.', tag:'verslo paveldėtojai', reason:'Siūlomas, nes abu domitės šeimos verslo perdavimu kitai kartai.', keywords:['paveld','šeimos','perdavim']},
-  {id:'m4', name:'Eglė S.', tag:'investuotojai į climate tech', reason:'Siūloma, nes taip pat aktyviai investuoja į atsinaujinančią energetiką.', keywords:['energetik','saul','klimat']},
-  {id:'m5', name:'Nedas V.', tag:'founderiai po exit’o', reason:'Siūlomas, nes pardavė savo verslą pernai ir dabar renkasi naują kryptį.', keywords:['exit','startuol','kryp']},
-  {id:'m6', name:'Giedrė T.', tag:'verslo paveldėtojai', reason:'Siūloma, nes taip pat perima šeimos verslą iš tėvų.', keywords:['paveld','tėv','verslo']},
-  {id:'m7', name:'Vaidas K.', tag:'pasitraukę iš valdybų', reason:'Siūlomas, nes neseniai paliko valdybos narystę ir ieško naujo užsiėmimo.', keywords:['valdyb','pasitrauk','direktori']}
+  {id:'m1', name:'Tomas B.', tag:'investuotojai į climate tech', reason:'Siūlomas, nes neseniai investavote į panašią sritį.', bio:'Investuotojas, šiuo metu daugiausia dėmesio skiria klimato technologijoms ir baterijų perdirbimui.', keywords:['klimat','baterij','tech']},
+  {id:'m2', name:'Justina P.', tag:'founderiai po exit’o', reason:'Siūloma, nes abu ieškote naujo tikslo po verslo pardavimo.', bio:'Neseniai pardavė savo verslą, dabar ieško naujos krypties per angel investavimą.', keywords:['exit','pardav','tiksl']},
+  {id:'m3', name:'Rokas L.', tag:'verslo paveldėtojai', reason:'Siūlomas, nes abu domitės šeimos verslo perdavimu kitai kartai.', bio:'Perima šeimos verslą iš tėvų, domisi valdymo perdavimo klausimais.', keywords:['paveld','šeimos','perdavim']},
+  {id:'m4', name:'Eglė S.', tag:'investuotojai į climate tech', reason:'Siūloma, nes taip pat aktyviai investuoja į atsinaujinančią energetiką.', bio:'Investuotoja į atsinaujinančią energetiką ir saulės elektrinių projektus.', keywords:['energetik','saul','klimat']},
+  {id:'m5', name:'Nedas V.', tag:'founderiai po exit’o', reason:'Siūlomas, nes pardavė savo verslą pernai ir dabar renkasi naują kryptį.', bio:'Buvęs startuolio įkūrėjas, pardavęs verslą ir šiuo metu ieškantis naujos krypties.', keywords:['exit','startuol','kryp']},
+  {id:'m6', name:'Giedrė T.', tag:'verslo paveldėtojai', reason:'Siūloma, nes taip pat perima šeimos verslą iš tėvų.', bio:'Perima šeimos verslą iš tėvų, dirba su kitos kartos valdymo klausimais.', keywords:['paveld','tėv','verslo']},
+  {id:'m7', name:'Vaidas K.', tag:'pasitraukę iš valdybų', reason:'Siūlomas, nes neseniai paliko valdybos narystę ir ieško naujo užsiėmimo.', bio:'Neseniai paliko valdybos narystę, šiuo metu svarsto patarėjo vaidmenis.', keywords:['valdyb','pasitrauk','direktori']}
 ];
 
 var seedChat = [
@@ -938,10 +959,15 @@ function getFakeBetaPosts(){
   var now = Date.now();
   var hour = 60 * 60 * 1000;
   return [
-    {id:'fake-1', authorName:'Tomas B.', text:'Investuoju į baterijų perdirbimo startuolius. Jei kas dirbate šioje srityje arba pažįstate gerų komandų — parašykite.', images:[], createdAt:new Date(now - 3*hour).toISOString()},
-    {id:'fake-2', authorName:'Justina P.', text:'Pardaviau verslą prieš pusmetį ir dabar galvoju, į ką investuoti angel raundus. Ieškau bendraminčių pasidalinti apžvalgomis.', images:[], createdAt:new Date(now - 9*hour).toISOString()},
-    {id:'fake-3', authorName:'Rokas L.', text:'Perimu šeimos verslą iš tėvų — ar kas nors čia jau perėjo panašų procesą? Norėčiau pasitarti apie valdymo perdavimą.', images:[], createdAt:new Date(now - 27*hour).toISOString()},
-    {id:'fake-4', authorName:'Vaidas K.', text:'Neseniai palikau valdybos narystę — svarstau patarėjo vaidmenis. Jei reikia patirties valdymo ar strategijos srityje, rašykite.', images:[], createdAt:new Date(now - 52*hour).toISOString()}
+    {id:'fake-1', authorName:'Tomas B.', text:'Investuoju į baterijų perdirbimo startuolius. Jei kas dirbate šioje srityje arba pažįstate gerų komandų — parašykite.', images:[], createdAt:new Date(now - 3*hour).toISOString(), comments:[
+      {id:'fc-1', authorName:'Eglė S.', text:'Turiu keletą kontaktų šioje srityje, parašysiu asmeniškai.', createdAt:new Date(now - 2*hour).toISOString()}
+    ]},
+    {id:'fake-2', authorName:'Justina P.', text:'Pardaviau verslą prieš pusmetį ir dabar galvoju, į ką investuoti angel raundus. Ieškau bendraminčių pasidalinti apžvalgomis.', images:[], createdAt:new Date(now - 9*hour).toISOString(), comments:[]},
+    {id:'fake-3', authorName:'Rokas L.', text:'Perimu šeimos verslą iš tėvų — ar kas nors čia jau perėjo panašų procesą? Norėčiau pasitarti apie valdymo perdavimą.', images:[], createdAt:new Date(now - 27*hour).toISOString(), comments:[
+      {id:'fc-2', authorName:'Giedrė T.', text:'Aš kaip tik pereinu tą patį — mielai pasidalinsiu patirtimi.', createdAt:new Date(now - 20*hour).toISOString()},
+      {id:'fc-3', authorName:'Vaidas K.', text:'Rekomenduoju pasitarti su nepriklausomu valdybos nariu — daug ką supaprastina.', createdAt:new Date(now - 15*hour).toISOString()}
+    ]},
+    {id:'fake-4', authorName:'Vaidas K.', text:'Neseniai palikau valdybos narystę — svarstau patarėjo vaidmenis. Jei reikia patirties valdymo ar strategijos srityje, rašykite.', images:[], createdAt:new Date(now - 52*hour).toISOString(), comments:[]}
   ];
 }
 
@@ -969,12 +995,26 @@ async function loadFeed(){
       return;
     }
     el.innerHTML = posts.map(function(p){
+      var isDemo = p.id.indexOf('fake-') === 0;
       var imagesHtml = (p.images && p.images.length)
         ? '<div class="post-images">' + p.images.map(function(src){ return '<img src="'+src+'">'; }).join('') + '</div>'
         : '';
       var deleteBtn = p.ownerId === myOwnerId
         ? '<button class="post-del" onclick="deletePost(\''+p.id+'\')">Šalinti</button>'
         : '';
+      var comments = p.comments || [];
+      var commentsHtml = comments.map(function(c){
+        return '<div class="comment">' +
+          '<button type="button" class="avatar comment-avatar post-avatar-trigger" data-name="'+escapeHtml(c.authorName)+'">'+escapeHtml(initials(c.authorName))+'</button>' +
+          '<div class="comment-body"><span class="comment-author">'+escapeHtml(c.authorName)+'</span> <span class="comment-text">'+escapeHtml(c.text)+'</span></div>' +
+        '</div>';
+      }).join('');
+      var composerHtml = isDemo
+        ? ''
+        : '<div class="comment-composer">' +
+            '<input type="text" class="comment-input" placeholder="Rašykite komentarą..." data-post-id="'+escapeHtml(p.id)+'">' +
+            '<button type="button" class="comment-send" data-post-id="'+escapeHtml(p.id)+'">Siųsti</button>' +
+          '</div>';
       return '<div class="post-card">' +
         '<div class="post-head">' +
           '<button type="button" class="avatar post-avatar-trigger" data-name="'+escapeHtml(p.authorName)+'">'+escapeHtml(initials(p.authorName))+'</button>' +
@@ -983,6 +1023,7 @@ async function loadFeed(){
         '</div>' +
         (p.text ? '<p class="post-text">'+escapeHtml(p.text)+'</p>' : '') +
         imagesHtml +
+        '<div class="post-comments">' + commentsHtml + composerHtml + '</div>' +
       '</div>';
     }).join('');
   }catch(e){
@@ -996,6 +1037,26 @@ async function deletePost(id){
   loadFeed();
 }
 
+async function submitComment(postId, inputEl){
+  var text = inputEl.value.trim();
+  if(!text) return;
+  var authorName = 'Narys';
+  try{
+    var acc = JSON.parse(localStorage.getItem(ACCOUNT_KEY));
+    if(acc && acc.name) authorName = acc.name;
+  }catch(e){}
+  inputEl.disabled = true;
+  try{
+    await fetch('/api/posts/comment', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({postId:postId, authorName:authorName, text:text})
+    });
+    loadFeed();
+  }catch(e){
+    inputEl.disabled = false;
+  }
+}
+
 /* ---------- posto autoriaus profilio langas ---------- */
 var PEOPLE_BY_NAME = {};
 people.forEach(function(p){ PEOPLE_BY_NAME[p.name] = p; });
@@ -1005,7 +1066,7 @@ function openProfileModal(name){
   document.getElementById('profile-modal-avatar').textContent = initials(name);
   document.getElementById('profile-modal-name').textContent = name;
   document.getElementById('profile-modal-tag').textContent = match ? match.tag : 'Bendruomenės narys';
-  document.getElementById('profile-modal-reason').textContent = match ? match.reason : 'Šis narys dar nepapildė viešo profilio aprašymo.';
+  document.getElementById('profile-modal-reason').textContent = match ? match.bio : 'Šis narys dar nepapildė viešo profilio aprašymo.';
   document.getElementById('profile-modal').classList.add('show');
 }
 function closeProfileModal(){
@@ -1013,7 +1074,17 @@ function closeProfileModal(){
 }
 document.getElementById('feed-list').addEventListener('click', function(e){
   var trigger = e.target.closest('.post-avatar-trigger');
-  if(trigger) openProfileModal(trigger.getAttribute('data-name'));
+  if(trigger){ openProfileModal(trigger.getAttribute('data-name')); return; }
+  var sendBtn = e.target.closest('.comment-send');
+  if(sendBtn){
+    var input = sendBtn.parentElement.querySelector('.comment-input');
+    submitComment(sendBtn.getAttribute('data-post-id'), input);
+  }
+});
+document.getElementById('feed-list').addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && e.target.classList.contains('comment-input')){
+    submitComment(e.target.getAttribute('data-post-id'), e.target);
+  }
 });
 document.addEventListener('keydown', function(e){
   if(e.key === 'Escape') closeProfileModal();

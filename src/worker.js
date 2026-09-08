@@ -205,6 +205,32 @@ async function handlePostsDelete(request, env) {
   return json({ ok: true });
 }
 
+async function handlePostComment(request, env) {
+  let data;
+  try {
+    data = await request.json();
+  } catch (e) {
+    return json({ error: 'Blogas užklausos formatas.' }, 400);
+  }
+
+  const postId = (data.postId || '').trim();
+  const authorName = (data.authorName || '').trim().slice(0, 60);
+  const text = (data.text || '').trim().slice(0, 500);
+  if (!postId || !authorName || !text) return json({ error: 'Trūksta duomenų.' }, 400);
+
+  const key = 'post:' + postId;
+  const value = await env.APPLICATIONS_KV.get(key);
+  if (!value) return json({ error: 'Skelbimas nerastas.' }, 404);
+
+  const post = JSON.parse(value);
+  if (!Array.isArray(post.comments)) post.comments = [];
+  const commentId = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+  post.comments.push({ id: commentId, authorName, text, createdAt: new Date().toISOString() });
+
+  await env.APPLICATIONS_KV.put(key, JSON.stringify(post));
+  return json({ ok: true, post });
+}
+
 async function handleAdminDelete(request, env) {
   if (!(await requireAdmin(request, env))) return json({ error: 'Neprisijungta.' }, 401);
 
@@ -233,6 +259,7 @@ export default {
     if (pathname === '/api/posts' && method === 'GET') return handlePostsList(request, env);
     if (pathname === '/api/posts' && method === 'POST') return handlePostsCreate(request, env);
     if (pathname === '/api/posts/delete' && method === 'POST') return handlePostsDelete(request, env);
+    if (pathname === '/api/posts/comment' && method === 'POST') return handlePostComment(request, env);
 
     return json({ error: 'Not found' }, 404);
   }
